@@ -1,0 +1,142 @@
+/* Importa uma fonte similar à da imagem (opcional, mas recomendado) */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
+
+/* Remove margens e define a fonte base */
+:host {
+  font-family: 'Manrope', sans-serif;
+}
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  width: 100vw;
+  min-height: 100vh;
+  box-sizing: border-box; 
+
+  /* ================== MUDANÇA 1: FUNDO ================== */
+  /* Cor base sólida alterada */
+  background-color: #0e2746;
+
+  /* O padrão de grade sutil, igual ao da imagem */
+  background-size: 40px 40px;
+  background-image: 
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
+    /* Gradiente removido, agora usa a cor sólida */
+    linear-gradient(to bottom, #0e2746, #0e2746); 
+  /* ================== FIM DA MUDANÇA 1 ================== */
+}
+
+/* Títulos na parte de cima */
+.page-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: white;
+  text-align: center;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-subtitle {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #d0e0ff;
+  text-align: center;
+  margin: 0 0 2rem 0;
+}
+
+/* O cartão branco do formulário */
+.login-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  box-sizing: border-box;
+}
+
+/* Estilização dos grupos de input */
+.input-group {
+  margin-bottom: 1.25rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 10px; /* Cantos arredondados */
+    font-size: 1rem;
+    
+    &:focus {
+      outline: none;
+      /* ================== MUDANÇA 2: FOCO ================== */
+      border-color: #0e2746; /* Cor de foco atualizada */
+      /* RGB para #0e2746 é (14, 39, 70) */
+      box-shadow: 0 0 0 3px rgba(14, 39, 70, 0.2); 
+      /* ================== FIM DA MUDANÇA 2 ================== */
+    }
+  }
+}
+
+/* Botão de "Entrar" / "Cadastrar" */
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  /* ================== MUDANÇA 3: BOTÃO ================== */
+  background-color: #0e2746; /* Cor principal do botão */
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem; 
+
+  &:hover {
+    background-color: #0b203b; /* Versão mais escura para o hover */
+  }
+  /* ================== FIM DA MUDANÇA 3 ================== */
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+/* Mensagem de Erro */
+.error {
+  color: #d93025;
+  text-align: center;
+  margin: 1rem 0 0 0;
+  font-size: 0.9rem;
+}
+
+/* Link para alternar entre Login e Cadastro */
+.toggle-link {
+  display: block;
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #555;
+  text-decoration: none;
+  font-size: 0.9rem;
+  
+  &:hover {
+    /* ================== MUDANÇA 4: LINK ================== */
+    color: #0e2746; /* Cor do hover do link atualizada */
+    /* ================== FIM DA MUDANÇA 4 ================== */
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
