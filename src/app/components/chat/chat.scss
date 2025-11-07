@@ -32,7 +32,7 @@
 }
 
 /* =======================================
- ==  HEADER (NOVO)
+ ==  HEADER
  ======================================= */
 .header {
   display: flex;
@@ -48,19 +48,24 @@
     align-items: center;
   }
 
-  .avatar {
+  .avatar-icon-wrapper {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     margin-right: 0.8rem;
-    object-fit: cover; 
-    background-color: #e0e0e0;
+    background-color: #0e2746; // Cor do seu tema
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
   }
 
   .text-info {
+    margin-left: 10px;
+    margin-top: 5px;
     display: flex;
     flex-direction: column;
-
     h3 { margin: 0; font-size: 1.1rem; color: #333; }
     .status-text { font-size: 0.85rem; color: #555; }
     .status-dot {
@@ -87,7 +92,7 @@
 }
 
 /* =======================================
- ==  ESTILOS DO FORMULÁRIO DE ATENDIMENTO (NOVO)
+ ==  ESTILOS DO FORMULÁRIO DE ATENDIMENTO
  ======================================= */
 
 .intake-form-wrapper {
@@ -95,19 +100,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; // Alinha no topo para o scroll
   padding: 2rem;
   width: 100%;
   box-sizing: border-box;
-
-  /* Fundo azul escuro com padrão de grade, como no login */
   background-color: #0e2746;
   background-size: 40px 40px;
   background-image: 
     repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
     repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
     linear-gradient(to bottom, #0e2746, #0e2746);
-  overflow-y: auto; // Para formulários longos
+  overflow-y: auto; // Garante o scroll
 }
 
 .intake-form-card {
@@ -116,11 +119,14 @@
   padding: 2.5rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 500px; // Um pouco mais largo que o login para caber mais campos
+  max-width: 500px; 
   box-sizing: border-box;
+  margin-bottom: 2rem;
   
   h3 {
-    text-align: center;
+    // --- A CORREÇÃO ESTÁ AQUI ---
+    text-align: center; // Garante que o título está centralizado
+    // --- FIM DA CORREÇÃO ---
     margin-top: 0;
     margin-bottom: 2rem;
     font-size: 1.5rem;
@@ -139,6 +145,7 @@
     }
     
     input[type="text"], 
+    input[type="number"],
     select {
       width: 100%;
       padding: 0.8rem 1rem;
@@ -146,14 +153,14 @@
       border: 1px solid #ddd;
       border-radius: 10px; 
       font-size: 1rem;
-      font-family: 'Manrope', sans-serif; // Garante a mesma fonte
+      font-family: 'Manrope', sans-serif;
+      text-transform: uppercase;
       
       &:focus {
         outline: none;
         border-color: #0e2746;
         box-shadow: 0 0 0 3px rgba(14, 39, 70, 0.2);
       }
-
       &:disabled {
         background-color: #f0f0f0;
         color: #777;
@@ -162,12 +169,21 @@
     }
     
     select {
-      appearance: none; // Remove a seta padrão do select
+      appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 1rem center;
       background-size: 1.25em;
-      padding-right: 2.5rem; // Espaço para a seta customizada
+      padding-right: 2.5rem;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
   }
 
@@ -183,11 +199,9 @@
     border-radius: 10px;
     transition: background-color 0.2s ease;
     margin-top: 1rem;
-
     &:hover {
       background-color: #0b203b;
     }
-
     &:disabled {
       background: #ccc;
       cursor: not-allowed;
@@ -195,23 +209,20 @@
   }
 }
 
-/* Responsividade do Formulário de Intake */
 @media (max-width: 600px) {
-  .intake-form-wrapper {
-    padding: 1rem;
+  .intake-form-wrapper { 
+    padding: 1rem; 
+    padding-top: 1rem; 
   }
-  .intake-form-card {
-    padding: 1.5rem;
+  .intake-form-card { 
+    padding: 1.5rem; 
   }
-  .form-group input, .form-group select {
-    padding: 0.7rem 1rem;
-  }
+  .form-group input, .form-group select { padding: 0.7rem 1rem; }
 }
 
-/* ================== FIM DA MUDANÇA ================== */
-
-
-/* Tela de Carregamento e Fila (MANTIDO) */
+/* =======================================
+ ==  ESTADOS (FILA, LOADING)
+ ======================================= */
 .loading-container {
   flex: 1;
   display: flex;
@@ -223,12 +234,10 @@
   padding: 1rem;
   text-align: center;
 }
-
 .queue-position {
   font-size: 1.2rem;
   color: #333;
   margin-top: 1rem;
-  
   strong {
     font-size: 1.5rem;
     color: #007bff;
@@ -236,7 +245,7 @@
 }
 
 /* =======================================
- ==  ÁREA DE CHAT (MANTIDO)
+ ==  ÁREA DE CHAT
  ======================================= */
 .messages-area {
   flex: 1;
@@ -246,29 +255,24 @@
   display: flex;
   flex-direction: column;
 }
-
 .messages-container {
   display: flex;
   flex-direction: column;
   flex-grow: 1; 
   justify-content: flex-end;
 }
-
 .message-row {
   display: flex;
   align-items: flex-end;
   margin-bottom: 0.5rem; 
-
   &.client-row {
     justify-content: flex-end; 
     .avatar-wrapper { order: 2; margin-left: 0.5rem; margin-right: 0; }
   }
-
   &.admin-row {
     justify-content: flex-start; 
     .avatar-wrapper { order: 0; margin-right: 0.5rem; margin-left: 0; }
   }
-
   .avatar-wrapper {
     flex-shrink: 0;
     width: 28px;
@@ -279,15 +283,11 @@
     justify-content: center;
     align-items: center;
     background-color: #e0e0e0;
-
-    .avatar {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    font-size: 0.85rem;
+    &.admin-row i { color: #555; }
+    &.client-row i { color: #555; }
   }
 }
-
 .message-bubble {
   padding: 0.6rem 0.9rem;
   font-size: 0.95rem;
@@ -295,15 +295,12 @@
   max-width: 75%; 
   word-wrap: break-word; 
   box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
-
   p { margin: 0; }
-  
   &.client-bubble {
     background: #007bff;
     color: white;
     border-radius: 18px 18px 0 18px; 
   }
-  
   &.admin-bubble {
     background: #e9e9eb; 
     color: #333;
@@ -312,7 +309,7 @@
 }
 
 /* =======================================
- ==  FORMULÁRIO DE MENSAGEM (MANTIDO)
+ ==  FORMULÁRIO DE MENSAGEM
  ======================================= */
 .message-form {
   display: flex;
@@ -352,14 +349,11 @@
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    font-size: 1.2rem;
+    font-size: 1rem; 
     flex-shrink: 0; 
     transition: background-color 0.2s;
-
     &:hover { background-color: #0056b3; }
     &:disabled { background-color: #a0c3e7; cursor: not-allowed; }
-    svg { fill: white; width: 20px; height: 20px; }
-
     &.button-text {
       width: auto; 
       height: 44px;

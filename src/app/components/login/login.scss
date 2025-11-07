@@ -40,12 +40,13 @@
 }
 
 .page-subtitle {
-  font-size: 1rem;
-  font-weight: 400;
-  color: #d0e0ff;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #FFF;
   text-align: center;
   margin: 0 0 2rem 0;
 }
+
 
 /* O cartão branco do formulário */
 .login-card {
@@ -139,4 +140,7 @@
     text-decoration: underline;
     cursor: pointer;
   }
+}
+.logo{
+  width: 250px;
 }

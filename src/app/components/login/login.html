@@ -1,7 +1,6 @@
 <div class="login-page">
-  <h2 class="page-title"><img src="client-chat-app\src\app\components\assets\logo_eq.png"></h2>
+  <h2 class="page-title"><img class="logo" src="https://github.com/renanxd25/docapp/blob/appDoc/src/app/components/assets/logo_eq.png?raw=true"></h2>
   <p class="page-subtitle">{{ isLoginMode() ? 'NOC Atendimentos' : 'Preencha seus dados para começar' }}</p>
-
   <form class="login-card" #authForm="ngForm" (ngSubmit)="onSubmit(authForm)">
     
     <div class="input-group" *ngIf="!isLoginMode()">

@@ -2,12 +2,9 @@
   
   <div class="header">
     <div class="header-info">
-      <div class="avatar-icon-wrapper">
         <i class="fa-solid fa-robot"></i>
-      </div>
       <div class="text-info">
         <h3>Atendimento ao Cliente</h3>
-        <span class="status-text">Online</span>
       </div>
     </div>
     <button (click)="logout()" class="logout-btn">Sair</button>
@@ -18,85 +15,130 @@
     @case ('pending_intake') {
       <div class="intake-form-wrapper">
         <div class="intake-form-card">
-          <h3>Formulário de Atendimento</h3>
+          <h4>Formulário de Atendimento</h4>
+          
           <form #intakeForm="ngForm" (ngSubmit)="submitIntakeForm(intakeForm)">
+            
             <div class="form-group">
-              <label for="nome">1. NOME:</label>
+              <label for="nome">NOME + SOBRENOME</label>
               <input type="text" name="nome" ngModel required>
             </div>
+            
             <div class="form-group">
-              <label for="distribuidora">2. QUAL DISTRIBUIDORA?</label>
-              <select name="distribuidora" ngModel required>
+              <label for="distribuidora">QUAL DISTRIBUIDORA?</label>
+              <select name="distribuidora" ngModel required #distribuidora="ngModel">
                 <option value="" disabled selected>Selecione uma opção...</option>
-                <option value="MA">A) MA</option>
-                <option value="PA">B) PA</option>
-                <option value="PI">C) PI</option>
-                <option value="AP">D) AP</option>
-                <option value="RS">E) RS</option>
-                <option value="GO">F) GO</option>
-                <option value="AL">H) AL</option>
+                <option value="AC">AC</option>
+                <option value="AL">AL</option>
+                <option value="AP">AP</option>
+                <option value="AM">AM</option>
+                <option value="BA">BA</option>
+                <option value="CE">CE</option>
+                <option value="DF">DF</option>
+                <option value="ES">ES</option>
+                <option value="GO">GO</option>
+                <option value="MA">MA</option>
+                <option value="MT">MT</option>
+                <option value="MS">MS</option>
+                <option value="MG">MG</option>
+                <option value="PA">PA</option>
+                <option value="PB">PB</option>
+                <option value="PR">PR</option>
+                <option value="PE">PE</option>
+                <option value="PI">PI</option>
+                <option value="RJ">RJ</option>
+                <option value="RN">RN</option>
+                <option value="RS">RS</option>
+                <option value="RO">RO</option>
+                <option value="RR">RR</option>
+                <option value="SC">SC</option>
+                <option value="SP">SP</option>
+                <option value="SE">SE</option>
+                <option value="TO">TO</option>
               </select>
             </div>
             <div class="form-group">
-              <label for="regional">3. QUAL SUA REGIONAL?</label>
-              <input type="text" name="regional" ngModel required>
+              <label for="regional">QUAL SUA REGIONAL?</label>
+
+              @if (regionalsByState[distribuidora.value] && regionalsByState[distribuidora.value].length > 0) {
+                <select name="regional" ngModel required>
+                  <option value="" disabled selected>Selecione a regional...</option>
+                  @for (regional of regionalsByState[distribuidora.value]; track regional) {
+                    <option [value]="regional">{{ regional }}</option>
+                  }
+                </select>
+              }
+
+              @else if (distribuidora.value) {
+                <input type="text" name="regional" ngModel required placeholder="Digite sua regional...">
+              }
+
+              @else {
+                <input type="text" name="regional" [value]="'Selecione uma distribuidora acima...'" disabled>
+              }
             </div>
+            
             <div class="form-group">
-              <label>4. Por favor, escolha uma das opções:</label>
+              <label>Por favor, escolha uma das opções:</label>
               <select name="opcaoAtendimento" ngModel required>
                 <option value="" disabled selected>Selecione uma opção...</option>
-                <option value="COMISSIONAMENTO">a) COMISSIONAMENTO</option>
-                <option value="VERIFICAR COMUNICAÇÃO">b) VERIFICAR COMUNICAÇÃO</option>
-                <option value="CADASTRO DE PORTA HUGHES">c) CADASTRO DE PORTA HUGHES</option>
-                <option value="TROCA DE PORTA GPRS">d) TROCA DE PORTA GPRS</option>
-                <option value="TROCA DE TECNOLOGIA DE COMUNICAÇÃO">e) TROCA DE TECNOLOGIA DE COMUNICAÇÃO</option>
-                <option value="VOLTAR COMUNICAÇÃO">f) VOLTAR COMUNICAÇÃO</option>
+                <option value="COMISSIONAMENTO">COMISSIONAMENTO</option>
+                <option value="VERIFICAR COMUNICAÇÃO">VERIFICAR COMUNICAÇÃO</option>
+                <option value="CADASTRO DE PORTA HUGHES">CADASTRO DE PORTA HUGHES</option>
+                <option value="TROCA DE PORTA GPRS">TROCA DE PORTA GPRS</option>
+                <option value="TROCA DE TECNOLOGIA DE COMUNICAÇÃO">TROCA DE TECNOLOGIA DE COMUNICAÇÃO</option>
+                <option value="VOLTAR COMUNICAÇÃO">VOLTAR COMUNICAÇÃO</option>
               </select>
             </div>
+
             <div class="form-group">
-              <label for="siglaSEAL">5. Preencha com a sigla da SE e AL:</label>
+              <label for="siglaSEAL">Preencha com a sigla da SE e AL:</label>
               <input type="text" name="siglaSEAL" ngModel required>
             </div>
+            
             <div class="form-group">
-              <label for="componente">6. Por favor, informe o componente:</label>
+              <label for="componente">Por favor, informe o componente:</label>
               <input type="text" name="componente" ngModel required>
             </div>
+            
             <div class="form-group">
-              <label>7. Escolha o modelo do controle:</label>
+              <label>Escolha o modelo do controle:</label>
               <select name="modeloControle" ngModel required>
                 <option value="" disabled selected>Selecione uma opção...</option>
-                <option value="ADATECH">A) ADATECH</option>
-                <option value="SEL 651R">B) SEL 651R</option>
-                <option value="SEL 751">C) SEL 751</option>
-                <option value="ADVC3">D) ADVC3</option>
-                <option value="ADVC">E) ADVC</option>
-                <option value="NOJA">F) NOJA</option>
-                <option value="TAVRIDA">H) TAVRIDA</option>
-                <option value="RUA">I) RUA</option>
-                <option value="TAPELETRO">J) TAPELETRO</option>
-                <option value="CTR2">K) CTR2</option>
-                <option value="CTR3">L) CTR3</option>
-                <option value="FORM6">M) FORM6</option>
-                <option value="G&W">N) G&W</option>
-                <option value="NENHUM">O) NENHUM</option>
+                <option value="ADATECH">ADATECH</option>
+                <option value="SEL 651R">SEL 651R</option>
+                <option value="SEL 751">SEL 751</option>
+                <option value="ADVC3">ADVC3</option>
+                <option value="ADVC">ADVC</option>
+                <option value="NOJA">NOJA</option>
+                <option value="TAVRIDA">TAVRIDA</option>
+                <option value="RUA">RUA</option>
+                <option value="TAPELETRO">TAPELETRO</option>
+                <option value="CTR2">CTR2</option>
+                <option value="CTR3">CTR3</option>
+                <option value="FORM6">FORM6</option>
+                <option value="G&W">G&W</option>
+                <option value="NENHUM">NENHUM</option>
               </select>
             </div>
+            
             <div class="form-group">
-              <label>8. Informe o modo de comunicação:</label>
+              <label>Informe o modo de comunicação:</label>
               <select name="modoComunicacao" ngModel required #modo="ngModel">
                 <option value="" disabled selected>Selecione uma opção...</option>
-                <option value="GPRS">A) GPRS</option>
-                <option value="BGAN">B) BGAN</option>
-                <option value="TELESPAZIO">C) TELESPAZIO</option>
-                <option value="RÁDIO">D) RÁDIO</option>
-                <option value="V2COM">E) V2COM</option>
-                <option value="FIBRA">F) FIBRA</option>
-                <option value="KOALA">G) KOALA</option>
-                <option value="SENSOR MT">H) SENSOR MT</option>
+                <option value="GPRS">GPRS</option>
+                <option value="BGAN">BGAN</option>
+                <option value="TELESPAZIO">TELESPAZIO</option>
+                <option value="RÁDIO">RÁDIO</option>
+                <option value="V2COM">V2COM</option>
+                <option value="FIBRA">FIBRA</option>
+                <option value="KOALA">KOALA</option>
+                <option value="SENSOR MT">SENSOR MT</option>
               </select>
             </div>
+
             <div class="form-group">
-              <label for="ip">9. QUAL O IP?</label>
+              <label for="ip">QUAL O IP?</label>
               @if (modo.value !== 'GPRS' && modo.value !== 'V2COM') {
                 <input type="text" name="ip" ngModel [required]="modo.value !== 'GPRS' && modo.value !== 'V2COM'" [placeholder]="modo.value === 'BGAN' ? 'Por favor, informe o IP GLOBAL' : ''">
               }
@@ -107,15 +149,17 @@
                 <input type="text" name="ip" value="10.74.150.20" disabled>
               }
             </div>
+
             <div class="form-group">
-              <label for="porta">10. QUAL A PORTA?</label>
+              <label for="porta">QUAL A PORTA?</label>
               @if (modo.value !== 'TELESPAZIO') {
-                <input type="text" name="porta" ngModel [required]="modo.value !== 'TELESPAZIO'">
+                <input type="number" name="porta" ngModel [required]="modo.value !== 'TELESPAZIO'">
               }
               @if (modo.value === 'TELESPAZIO') {
                 <input type="text" name="porta" value="20000" disabled>
               }
             </div>
+
             <button type="submit" [disabled]="intakeForm.invalid">Entrar na Fila</button>
           </form>
         </div>
@@ -135,24 +179,19 @@
       <div class="messages-area" #messagesArea>
         <div class="messages-container">
           <div *ngFor="let msg of (messages$ | async)" class="message-row" [ngClass]="{ 'client-row': msg.senderId === userId, 'admin-row': msg.senderId !== userId }">
-            
-            <div class="avatar-wrapper" *ngIf="msg.senderId !== userId">
-              <i class="fa-solid fa-robot"></i> </div>
-            
+            <div class="avatar-wrapper" *ngIf="msg.senderId !== userId"><i class="fa-solid fa-robot"></i></div>
             <div class="message-bubble" [ngClass]="{ 'client-bubble': msg.senderId === userId, 'admin-bubble': msg.senderId !== userId }">
               <p [innerHTML]="msg.text | preformat"></p>
             </div>
-            
-            <div class="avatar-wrapper" *ngIf="msg.senderId === userId">
-              <i class="fa-solid fa-user"></i> </div>
+            <div class="avatar-wrapper" *ngIf="msg.senderId === userId"><i class="fa-solid fa-user"></i></div>
           </div>
         </div>
       </div>
-      
       <form class="message-form" #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)">
         <input type="text" placeholder="Escreva sua mensagem..." name="message" ngModel required autocomplete="off">
         <button type="submit" [disabled]="chatForm.invalid">
-          <i class="fa-solid fa-paper-plane"></i> </button>
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
       </form>
     }
 
@@ -168,12 +207,9 @@
           </div>
         </div>
       </div>
-      
       <form class="message-form" #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)">
         <input type="text" placeholder="Atendimento encerrado. Envie uma mensagem para recomeçar." name="message" ngModel autocomplete="off">
-        <button type="submit" class="button-text">
-          Novo Atendimento
-        </button>
+        <button type="submit" class="button-text">Novo Atendimento</button>
       </form>
     }
 
