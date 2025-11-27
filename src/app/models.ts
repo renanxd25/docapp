@@ -1,6 +1,5 @@
 import { Timestamp } from '@angular/fire/firestore';
 
-// NOVA INTERFACE PARA OS DADOS DO FORMULÁRIO
 export interface IntakeData {
   nome: string;
   distribuidora: string;
@@ -26,14 +25,17 @@ export interface Conversation {
   unreadByDashboard: boolean;
   queuedAt?: Timestamp; 
   attendedBy?: string;  
-  
-  // O campo 'intakeData' agora usa a nova interface
   intakeData?: IntakeData; 
 }
 
 export interface Message {
   id?: string;
-  text: string;
   senderId: string;
   timestamp: Timestamp;
+  
+  // Campos opcionais: uma mensagem pode ter texto OU mídia (ou ambos)
+  text?: string;
+  mediaUrl?: string;    
+  mediaType?: 'image' | 'video' | 'audio'; 
+  fileName?: string; 
 }

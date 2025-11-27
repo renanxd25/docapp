@@ -2,9 +2,10 @@
   
   <div class="header">
     <div class="header-info">
-        <i class="fa-solid fa-robot"></i>
+      <div class="avatar-icon-wrapper"><i class="fa-solid fa-robot"></i></div>
       <div class="text-info">
         <h3>Atendimento ao Cliente</h3>
+        <span class="status-dot online"></span><span class="status-text">Online</span>
       </div>
     </div>
     <button (click)="logout()" class="logout-btn">Sair</button>
@@ -15,73 +16,53 @@
     @case ('pending_intake') {
       <div class="intake-form-wrapper">
         <div class="intake-form-card">
-          <h4>Formulário de Atendimento</h4>
+          <h3>Formulário de Atendimento</h3>
           
           <form #intakeForm="ngForm" (ngSubmit)="submitIntakeForm(intakeForm)">
             
             <div class="form-group">
-              <label for="nome">NOME + SOBRENOME</label>
-              <input type="text" name="nome" ngModel required>
+              <label>1. NOME:</label>
+              <input type="text" name="nome" ngModel required placeholder="Seu nome completo" oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <div class="form-group">
-              <label for="distribuidora">QUAL DISTRIBUIDORA?</label>
+              <label>2. DISTRIBUIDORA:</label>
               <select name="distribuidora" ngModel required #distribuidora="ngModel">
-                <option value="" disabled selected>Selecione uma opção...</option>
-                <option value="AC">AC</option>
-                <option value="AL">AL</option>
-                <option value="AP">AP</option>
-                <option value="AM">AM</option>
-                <option value="BA">BA</option>
-                <option value="CE">CE</option>
-                <option value="DF">DF</option>
-                <option value="ES">ES</option>
-                <option value="GO">GO</option>
-                <option value="MA">MA</option>
-                <option value="MT">MT</option>
-                <option value="MS">MS</option>
-                <option value="MG">MG</option>
-                <option value="PA">PA</option>
-                <option value="PB">PB</option>
-                <option value="PR">PR</option>
-                <option value="PE">PE</option>
-                <option value="PI">PI</option>
-                <option value="RJ">RJ</option>
-                <option value="RN">RN</option>
-                <option value="RS">RS</option>
-                <option value="RO">RO</option>
-                <option value="RR">RR</option>
-                <option value="SC">SC</option>
-                <option value="SP">SP</option>
-                <option value="SE">SE</option>
-                <option value="TO">TO</option>
+                <option value="" disabled selected>Selecione...</option>
+                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="regional">QUAL SUA REGIONAL?</label>
 
+            <div class="form-group">
+              <label>3. REGIONAL:</label>
               @if (regionalsByState[distribuidora.value] && regionalsByState[distribuidora.value].length > 0) {
                 <select name="regional" ngModel required>
-                  <option value="" disabled selected>Selecione a regional...</option>
+                  <option value="" disabled selected>Selecione...</option>
                   @for (regional of regionalsByState[distribuidora.value]; track regional) {
                     <option [value]="regional">{{ regional }}</option>
                   }
                 </select>
               }
-
               @else if (distribuidora.value) {
-                <input type="text" name="regional" ngModel required placeholder="Digite sua regional...">
+                <input type="text" name="regional" ngModel required placeholder="Digite sua regional..." oninput="this.value = this.value.toUpperCase()">
               }
-
               @else {
                 <input type="text" name="regional" [value]="'Selecione uma distribuidora acima...'" disabled>
               }
             </div>
             
             <div class="form-group">
-              <label>Por favor, escolha uma das opções:</label>
+              <label>4. OPÇÃO DE ATENDIMENTO:</label>
               <select name="opcaoAtendimento" ngModel required>
-                <option value="" disabled selected>Selecione uma opção...</option>
+                <option value="" disabled selected>Selecione...</option>
                 <option value="COMISSIONAMENTO">COMISSIONAMENTO</option>
                 <option value="VERIFICAR COMUNICAÇÃO">VERIFICAR COMUNICAÇÃO</option>
                 <option value="CADASTRO DE PORTA HUGHES">CADASTRO DE PORTA HUGHES</option>
@@ -92,19 +73,19 @@
             </div>
 
             <div class="form-group">
-              <label for="siglaSEAL">Preencha com a sigla da SE e AL:</label>
-              <input type="text" name="siglaSEAL" ngModel required>
+              <label>5. SIGLA SE E AL:</label>
+              <input type="text" name="siglaSEAL" ngModel required oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <div class="form-group">
-              <label for="componente">Por favor, informe o componente:</label>
-              <input type="text" name="componente" ngModel required>
+              <label>6. COMPONENTE:</label>
+              <input type="text" name="componente" ngModel required oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <div class="form-group">
-              <label>Escolha o modelo do controle:</label>
+              <label>7. MODELO DO CONTROLE:</label>
               <select name="modeloControle" ngModel required>
-                <option value="" disabled selected>Selecione uma opção...</option>
+                <option value="" disabled selected>Selecione...</option>
                 <option value="ADATECH">ADATECH</option>
                 <option value="SEL 651R">SEL 651R</option>
                 <option value="SEL 751">SEL 751</option>
@@ -118,45 +99,77 @@
                 <option value="CTR3">CTR3</option>
                 <option value="FORM6">FORM6</option>
                 <option value="G&W">G&W</option>
+                <option value="SENSOR MT">SENSOR MT</option>
+                <option value="KOALA">KOALA</option>
                 <option value="NENHUM">NENHUM</option>
               </select>
             </div>
             
             <div class="form-group">
-              <label>Informe o modo de comunicação:</label>
+              <label>8. MODO DE COMUNICAÇÃO:</label>
               <select name="modoComunicacao" ngModel required #modo="ngModel">
-                <option value="" disabled selected>Selecione uma opção...</option>
+                <option value="" disabled selected>Selecione...</option>
                 <option value="GPRS">GPRS</option>
                 <option value="BGAN">BGAN</option>
                 <option value="TELESPAZIO">TELESPAZIO</option>
+                <option value="FIBRA">FIBRA</option>
                 <option value="RÁDIO">RÁDIO</option>
                 <option value="V2COM">V2COM</option>
-                <option value="FIBRA">FIBRA</option>
-                <option value="KOALA">KOALA</option>
                 <option value="SENSOR MT">SENSOR MT</option>
               </select>
             </div>
 
+            @if (modo.value === 'GPRS') {
+              <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
+                <label style="color: #007bff;">↳ SELECIONE O TIPO DE GPRS:</label>
+                <select name="tipoGprs" ngModel required>
+                  <option value="" disabled selected>Selecione o tipo...</option>
+                  <option value="CAS">GPRS-CAS</option>
+                  <option value="V2COM">GPRS-V2COM</option>
+                  <option value="HORUS">GPRS-HORUS</option>
+                </select>
+              </div>
+            }
+
             <div class="form-group">
-              <label for="ip">QUAL O IP?</label>
-              @if (modo.value !== 'GPRS' && modo.value !== 'V2COM') {
-                <input type="text" name="ip" ngModel [required]="modo.value !== 'GPRS' && modo.value !== 'V2COM'" [placeholder]="modo.value === 'BGAN' ? 'Por favor, informe o IP GLOBAL' : ''">
-              }
+              <label>9. IP:</label>
               @if (modo.value === 'GPRS') {
-                <input type="text" name="ip" value="10.1.1.58" disabled>
+                @if (intakeForm.value.tipoGprs === 'CAS') {
+                  <input type="text" name="ip" value="10.1.1.58" disabled style="background-color: #e9ecef;">
+                  <input type="hidden" name="ipHidden" ngModel="10.1.1.58"> 
+                } 
+                @else if (intakeForm.value.tipoGprs === 'V2COM') {
+                  <input type="text" name="ip" value="10.74.150.20" disabled style="background-color: #e9ecef;">
+                   <input type="hidden" name="ipHidden" ngModel="10.74.150.20">
+                } 
+                @else if (intakeForm.value.tipoGprs === 'HORUS') {
+                  <input type="text" name="ip" value="10.82.149.2" disabled style="background-color: #e9ecef;">
+                   <input type="hidden" name="ipHidden" ngModel="10.82.149.2">
+                } 
+                @else {
+                  <input type="text" name="ip" placeholder="Selecione o tipo de GPRS acima..." disabled>
+                }
               }
-              @if (modo.value === 'V2COM') {
-                <input type="text" name="ip" value="10.74.150.20" disabled>
+              @else if (modo.value === 'BGAN') {
+                <input type="text" name="ip" ngModel required placeholder="Digite o IP GLOBAL" oninput="this.value = this.value.toUpperCase()">
+              }
+              @else {
+                <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
               }
             </div>
 
             <div class="form-group">
-              <label for="porta">QUAL A PORTA?</label>
-              @if (modo.value !== 'TELESPAZIO') {
-                <input type="number" name="porta" ngModel [required]="modo.value !== 'TELESPAZIO'">
+              <label>10. PORTA:</label>
+              @if (modo.value === 'TELESPAZIO' || modo.value === 'FIBRA') {
+                <input type="text" name="porta" value="20000" disabled style="background-color: #e9ecef;">
+                <input type="hidden" name="portaHidden" ngModel="20000">
+              } 
+              @else if (intakeForm.value.opcaoAtendimento === 'CADASTRO DE PORTA HUGHES' && modo.value === 'BGAN') {
+                <input type="text" name="porta" value="CONSULTAR VELP" disabled style="background-color: #e9ecef;">
+                <input type="hidden" name="portaHidden" ngModel="CONSULTAR VELP">
               }
-              @if (modo.value === 'TELESPAZIO') {
-                <input type="text" name="porta" value="20000" disabled>
+              @else {
+                <input type="number" name="porta" ngModel required placeholder="Digite a porta">
               }
             </div>
 
@@ -179,44 +192,84 @@
       <div class="messages-area" #messagesArea>
         <div class="messages-container">
           <div *ngFor="let msg of (messages$ | async)" class="message-row" [ngClass]="{ 'client-row': msg.senderId === userId, 'admin-row': msg.senderId !== userId }">
+            
             <div class="avatar-wrapper" *ngIf="msg.senderId !== userId"><i class="fa-solid fa-robot"></i></div>
+            
             <div class="message-bubble" [ngClass]="{ 'client-bubble': msg.senderId === userId, 'admin-bubble': msg.senderId !== userId }">
-              <p [innerHTML]="msg.text | preformat"></p>
+              
+              @if(msg.text) {
+                <p [innerHTML]="msg.text | preformat"></p>
+              } 
+              @else if (msg.mediaUrl && msg.mediaType === 'image') {
+                <img [src]="msg.mediaUrl" alt="Foto" class="chat-media-img">
+              } 
+              @else if (msg.mediaUrl && msg.mediaType === 'video') {
+                <video controls [src]="msg.mediaUrl" class="chat-media-video"></video>
+              } 
+              @else if (msg.mediaUrl && msg.mediaType === 'audio') {
+                <audio controls [src]="msg.mediaUrl" class="chat-media-audio"></audio>
+              }
+
+              <span class="timestamp">
+                {{ msg.timestamp.toDate() | date:'HH:mm' }}
+              </span>
+
             </div>
+            
             <div class="avatar-wrapper" *ngIf="msg.senderId === userId"><i class="fa-solid fa-user"></i></div>
           </div>
         </div>
       </div>
+      
+      <div *ngIf="isUploading()" class="upload-indicator">
+        Enviando... {{ uploadPercentage() | number:'1.0-0' }}%
+        <div class="progress-bar"><div class="progress" [style.width.%]="uploadPercentage()"></div></div>
+      </div>
+
+      <div *ngIf="isRecording()" class="recording-status">
+        <span class="pulsing-dot"></span> Gravando áudio... Clique no microfone para enviar.
+      </div>
+      
       <form class="message-form" #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)">
-        <input type="text" placeholder="Escreva sua mensagem..." name="message" ngModel required autocomplete="off">
-        <button type="submit" [disabled]="chatForm.invalid">
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
+        <button type="button" class="icon-btn" (click)="galleryInput.click()" [disabled]="isUploading() || isRecording()" title="Anexar arquivo"><i class="fa-solid fa-paperclip"></i></button>
+        <input type="file" #galleryInput (change)="onFileSelected($event)" style="display:none" accept="image/*,video/*,audio/*">
+
+        <button type="button" class="icon-btn" (click)="cameraInput.click()" [disabled]="isUploading() || isRecording()" title="Tirar foto"><i class="fa-solid fa-camera"></i></button>
+        <input type="file" #cameraInput (change)="onFileSelected($event)" style="display:none" accept="image/*" capture="environment">
+
+        <input *ngIf="!isRecording()" type="text" placeholder="Mensagem..." name="message" ngModel autocomplete="off" [disabled]="isUploading()">
+        
+        <button type="button" class="icon-btn mic-btn" [ngClass]="{'recording': isRecording()}" (click)="toggleRecording()" [disabled]="isUploading()"><i class="fa-solid" [ngClass]="isRecording() ? 'fa-stop' : 'fa-microphone'"></i></button>
+
+        <button *ngIf="!isRecording()" type="submit" [disabled]="chatForm.invalid || isUploading()"><i class="fa-solid fa-paper-plane"></i></button>
       </form>
     }
 
     @case ('closed') {
       <div class="messages-area" #messagesArea>
         <div class="messages-container">
-          <div *ngFor="let msg of (messages$ | async)" class="message-row" [ngClass]="{ 'client-row': msg.senderId === userId, 'admin-row': msg.senderId !== userId }">
+           <div *ngFor="let msg of (messages$ | async)" class="message-row" [ngClass]="{ 'client-row': msg.senderId === userId, 'admin-row': msg.senderId !== userId }">
             <div class="avatar-wrapper" *ngIf="msg.senderId !== userId"><i class="fa-solid fa-robot"></i></div>
             <div class="message-bubble" [ngClass]="{ 'client-bubble': msg.senderId === userId, 'admin-bubble': msg.senderId !== userId }">
-              <p [innerHTML]="msg.text | preformat"></p>
+              @if(msg.text) { <p [innerHTML]="msg.text | preformat"></p> } 
+              @else if (msg.mediaUrl && msg.mediaType === 'image') { <img [src]="msg.mediaUrl" class="chat-media-img"> } 
+              @else if (msg.mediaUrl && msg.mediaType === 'video') { <video controls [src]="msg.mediaUrl" class="chat-media-video"></video> } 
+              @else if (msg.mediaUrl && msg.mediaType === 'audio') { <audio controls [src]="msg.mediaUrl" class="chat-media-audio"></audio> }
+              
+              <span class="timestamp">{{ msg.timestamp.toDate() | date:'HH:mm' }}</span>
             </div>
             <div class="avatar-wrapper" *ngIf="msg.senderId === userId"><i class="fa-solid fa-user"></i></div>
           </div>
         </div>
       </div>
       <form class="message-form" #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)">
-        <input type="text" placeholder="Atendimento encerrado. Envie uma mensagem para recomeçar." name="message" ngModel autocomplete="off">
+        <input type="text" placeholder="Atendimento encerrado." name="message" ngModel autocomplete="off">
         <button type="submit" class="button-text">Novo Atendimento</button>
       </form>
     }
 
     @case ('loading') {
-      <div class="loading-container">
-        <p>Carregando...</p>
-      </div>
+      <div class="loading-container"><p>Carregando...</p></div>
     }
   }
 </div>
