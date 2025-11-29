@@ -1,273 +1,323 @@
-import { Component, inject, OnInit, ViewChild, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { Observable, of, Subscription, BehaviorSubject, combineLatest } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
-import { IntakeData, Message } from '../../models'; 
 import { 
-  Firestore, collection, collectionData, query, 
-  orderBy, addDoc, serverTimestamp, doc, setDoc, onSnapshot, 
-  Timestamp, Unsubscribe, where, limit
+  Firestore, collection, addDoc, serverTimestamp, 
+  query, where, orderBy, onSnapshot, doc, updateDoc, 
+  limit, Timestamp, Unsubscribe 
 } from '@angular/fire/firestore';
-import { Auth, authState, signOut, User } from '@angular/fire/auth';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
-import { Router } from '@angular/router';
-import { PreformatPipe } from '../../utils/preformat-pipe'; 
+import { Auth, signInAnonymously, signOut, User, onAuthStateChanged } from '@angular/fire/auth';
+import { Observable, of } from 'rxjs';
+import { PreformatPipe } from '../../utils/preformat-pipe';
+
+interface Message {
+  text?: string;
+  senderId: string;
+  timestamp: any;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'video' | 'audio';
+}
+
+interface IntakeData {
+  nome: string;
+  telefone: string; // Adicionado
+  distribuidora: string;
+  regional: string;
+  opcaoAtendimento: string;
+  siglaSEAL: string;
+  componente: string;
+  modeloControle: string;
+  modoComunicacao: string;
+  tipoGprs?: string; // Adicionado
+  ip?: string;
+  porta?: string;
+}
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, PreformatPipe], 
+  imports: [CommonModule, FormsModule, PreformatPipe],
   templateUrl: './chat.html',
   styleUrl: './chat.scss'
 })
-export class Chat implements OnInit, OnDestroy {
-  @ViewChild('chatForm') chatForm!: NgForm;
-  
-  firestore: Firestore = inject(Firestore);
-  auth: Auth = inject(Auth);
-  router: Router = inject(Router);
-  storage: Storage = inject(Storage);
+export class Chat implements OnInit, OnDestroy, AfterViewChecked {
+  private firestore = inject(Firestore);
+  private auth = inject(Auth);
+  private storage = inject(Storage);
 
-  private currentConversationId = signal<string | null>(null);
-  private localWelcomeMessage = new BehaviorSubject<Message | null>(null);
-  private firestoreMessages$!: Observable<Message[]>;
-  public messages$!: Observable<Message[]>;
+  userId: string | null = null;
+  conversationId: string | null = null;
+  messages$: Observable<Message[]> = of([]);
   
-  currentUser: User | null = null;
-  userId: string | null = null; 
-
   conversationStatus = signal<'loading' | 'pending_intake' | 'queued' | 'active' | 'closed'>('loading');
-  queuePosition = signal(0);
+  queuePosition = signal<number>(0);
   
-  // --- NOVOS SINAIS PARA UPLOAD E GRAVAÇÃO ---
   isUploading = signal(false);
   uploadPercentage = signal(0);
-  isRecording = signal(false); // Indica se está gravando áudio
-  // -------------------------------------------
+  isRecording = signal(false);
 
-  private authSub: Subscription | null = null;
-  private convSub: Unsubscribe | null = null; 
-  private queueSub: Unsubscribe | null = null; 
-  
-  // Variáveis para gravação de áudio
+  private convoUnsub: Unsubscribe | null = null;
+  private queueUnsub: Unsubscribe | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: any[] = [];
 
-  public regionalsByState: { [key: string]: string[] } = {
-    'AL': ['CENTRO', 'LESTE', 'OESTE'], 'AP': ['AP'],
-    'MA': ['CENTRO', 'LESTE', 'NOROESTE', 'NORTE', 'SUL'],
-    'PA': ['CENTRO', 'LESTE', 'NORDESTE', 'NOROESTE', 'NORTE', 'OESTE', 'SUL'],
-    'PI': ['CENTRO-SUL', 'METROPOLITANA', 'NORTE', 'SUL'],
-    'RS': ['CAMPANHA', 'CARBONIFERA', 'CENTRO', 'LITORAL NORTE', 'LITORAL SUL', 'METROPOLITANA', 'NORDESTE', 'NORTE', 'PORTO ALEGRE', 'SUL'],
-    'AC': [], 'AM': [], 'BA': [], 'CE': [], 'DF': [], 'ES': [],
-    'GO': [], 'MT': [], 'MS': [], 'MG': [], 'PB': [], 'PR': [],
-    'PE': [], 'RJ': [], 'RN': [], 'RO': [], 'RR': [], 'SC': [],
-    'SP': [], 'SE': [], 'TO': []
+  regionalsByState: { [key: string]: string[] } = {
+    'MA': ['SUL', 'LESTE', 'CENTRO', 'NORTE'],
+    'PI': ['METROPOLITANA', 'NORTE', 'SUL', 'CENTRO'],
+    'CE': ['METROPOLITANA', 'NORTE', 'SUL', 'CENTRO', 'LESTE', 'OESTE'],
+    'GO': ['METROPOLITANA', 'SUL', 'NORTE', 'LESTE', 'OESTE'],
+    'TO': ['NORTE', 'SUL', 'CENTRO'],
+    'MT': ['NORTE', 'SUL', 'LESTE', 'OESTE', 'CENTRO'],
+    'MS': ['CAMPO GRANDE', 'DOURADOS', 'TRÊS LAGOAS', 'CORUMBÁ'],
+    'ES': ['NORTE', 'SUL', 'CENTRO', 'SERRANA'],
+    'BA': ['SALVADOR', 'FEIRA DE SANTANA', 'VITÓRIA DA CONQUISTA', 'ITABUNA', 'BARREIRAS'],
+    'SP': ['CAPITAL', 'GRANDE SP', 'INTERIOR', 'LITORAL'],
+    'RJ': ['CAPITAL', 'BAIXADA', 'NITERÓI', 'INTERIOR'],
+    'MG': ['BH', 'TRIÂNGULO', 'SUL', 'NORTE', 'LESTE'],
+    'PR': ['CURITIBA', 'LONDRINA', 'MARINGÁ', 'OESTE'],
+    'SC': ['FLORIANÓPOLIS', 'JOINVILLE', 'BLUMENAU', 'OESTE'],
+    'RS': ['PORTO ALEGRE', 'CAXIAS', 'PELOTAS', 'SANTA MARIA'],
+    'PE': ['RECIFE', 'CARUARU', 'PETROLINA', 'MATA SUL'],
+    'AC': ['CAPITAL', 'INTERIOR'],
+    'AL': ['CAPITAL', 'INTERIOR'],
+    'AP': ['CAPITAL', 'INTERIOR'],
+    'AM': ['CAPITAL', 'INTERIOR'],
+    'DF': ['BRASÍLIA'],
+    'PB': ['JOÃO PESSOA', 'CAMPINA GRANDE', 'SERTÃO'],
+    'RN': ['NATAL', 'MOSSORÓ', 'SERIDÓ'],
+    'RO': ['CAPITAL', 'INTERIOR'],
+    'RR': ['CAPITAL', 'INTERIOR'],
+    'SE': ['CAPITAL', 'INTERIOR']
   };
 
-  constructor() {
-    const conversationId$ = toObservable(this.currentConversationId);
-
-    this.firestoreMessages$ = conversationId$.pipe(
-      switchMap(convoId => {
-        if (convoId) {
-          const messagesCollection = collection(this.firestore, `conversations/${convoId}/messages`);
-          const q = query(messagesCollection, orderBy('timestamp'));
-          return collectionData(q, { idField: 'id' }) as Observable<Message[]>;
-        }
-        return of([]);
-      })
-    );
-
-    this.messages$ = combineLatest([
-      this.localWelcomeMessage.asObservable(),
-      this.firestoreMessages$
-    ]).pipe(
-      map(([welcomeMsg, firestoreMsgs]) => {
-        return welcomeMsg ? [welcomeMsg, ...firestoreMsgs] : [...firestoreMsgs];
-      })
-    );
-  }
+  @ViewChild('messagesArea') private messagesAreaElement!: ElementRef;
+  private shouldScrollToBottom = false;
 
   ngOnInit() {
-    this.authSub = authState(this.auth).subscribe(user => {
+    onAuthStateChanged(this.auth, (user) => {
       if (user) {
-        this.currentUser = user;
-        this.userId = user.uid; 
-        this.listenForActiveConversation(user.uid); 
+        this.userId = user.uid;
+        this.checkActiveConversation();
       } else {
-        this.userId = null;
-        this.currentUser = null;
-        this.router.navigate(['/login']);
+        signInAnonymously(this.auth).catch(err => console.error("Erro auth anonimo:", err));
       }
     });
   }
 
   ngOnDestroy() {
-    this.authSub?.unsubscribe();
-    if (this.convSub) this.convSub(); 
-    if (this.queueSub) this.queueSub(); 
+    if (this.convoUnsub) this.convoUnsub();
+    if (this.queueUnsub) this.queueUnsub();
   }
 
-  listenForActiveConversation(uid: string) {
-    if (this.convSub) this.convSub(); 
+  ngAfterViewChecked() {
+    if (this.shouldScrollToBottom) {
+      this.scrollToBottom();
+      this.shouldScrollToBottom = false;
+    }
+  }
+
+  private scrollToBottom(): void {
+    try {
+      this.messagesAreaElement.nativeElement.scrollTop = this.messagesAreaElement.nativeElement.scrollHeight;
+    } catch(err) { }
+  }
+
+  // MÁSCARA DE TELEFONE
+  formatPhone(event: any) {
+    let v = event.target.value.replace(/\D/g, "");
+    v = v.replace(/^(\d\d)(\d)/g, "($1) $2");
+    v = v.replace(/(\d{5})(\d)/, "$1-$2");
+    event.target.value = v.substring(0, 15);
+  }
+
+  async checkActiveConversation() {
+    if (!this.userId) return;
+    const conversationsRef = collection(this.firestore, 'conversations');
     const q = query(
-      collection(this.firestore, 'conversations'),
-      where('userId', '==', uid), 
-      where('status', 'in', ['queued', 'active', 'closed']), 
-      orderBy('queuedAt', 'desc'), 
-      limit(1) 
+      conversationsRef, 
+      where('userId', '==', this.userId),
+      where('status', 'in', ['queued', 'active', 'pending_intake']),
+      orderBy('lastMessage.timestamp', 'desc'),
+      limit(1)
     );
-    this.convSub = onSnapshot(q, (snapshot) => {
-      if (snapshot.empty || snapshot.docs[0].data()['status'] === 'closed') {
-        this.conversationStatus.set('pending_intake');
-        this.currentConversationId.set(null);
-        this.localWelcomeMessage.next(null);
-      } else {
-        const convoDoc = snapshot.docs[0];
-        const status = convoDoc.data()['status'];
-        this.currentConversationId.set(convoDoc.id); 
-        this.conversationStatus.set(status);
-        if (status === 'queued') {
-          this.listenToQueuePosition(convoDoc.id); 
+
+    this.convoUnsub = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const docSnap = snapshot.docs[0];
+        this.conversationId = docSnap.id;
+        const data = docSnap.data();
+        this.conversationStatus.set(data['status']);
+        
+        if (data['status'] === 'queued') {
+          this.listenToQueuePosition(docSnap.data()['queuedAt']);
         } else {
-          if (this.queueSub) this.queueSub(); 
-          this.queuePosition.set(0);
+           this.queuePosition.set(0);
+           if (this.queueUnsub) { this.queueUnsub(); this.queueUnsub = null; }
         }
+
+        if (data['status'] === 'active' || data['status'] === 'closed') {
+          this.loadMessages(this.conversationId!);
+        }
+      } else {
+        this.conversationStatus.set('pending_intake');
       }
     });
   }
 
-  listenToQueuePosition(conversationId: string) {
-    if (this.queueSub) this.queueSub(); 
-    const q = query(
-      collection(this.firestore, 'conversations'), 
-      where('status', '==', 'queued'), 
-      orderBy('queuedAt')               
-    );
-    this.queueSub = onSnapshot(q, (snapshot) => {
-      const myIndex = snapshot.docs.findIndex(doc => doc.id === conversationId);
-      this.queuePosition.set(myIndex > -1 ? myIndex + 1 : 0);
-    }, (error) => console.error("Erro ao ouvir a fila: ", error));
+  async submitIntakeForm(form: NgForm) {
+    if (form.invalid || !this.userId) return;
+
+    const formData = form.value;
+    const ipFinal = formData.ipHidden || formData.ip;
+    const portaFinal = formData.portaHidden || formData.porta;
+
+    const intakeData: IntakeData = {
+      nome: formData.nome,
+      telefone: formData.telefone, // Capturando Telefone
+      distribuidora: formData.distribuidora,
+      regional: formData.regional,
+      opcaoAtendimento: formData.opcaoAtendimento,
+      siglaSEAL: formData.siglaSEAL,
+      componente: formData.componente,
+      modeloControle: formData.modeloControle,
+      modoComunicacao: formData.modoComunicacao,
+      tipoGprs: formData.tipoGprs || null, // Capturando Tipo GPRS
+      ip: ipFinal,
+      porta: portaFinal
+    };
+
+    try {
+      if (this.conversationId) {
+        const docRef = doc(this.firestore, 'conversations', this.conversationId);
+        await updateDoc(docRef, {
+          intakeData: intakeData,
+          status: 'queued',
+          queuedAt: serverTimestamp(),
+          userName: intakeData.nome
+        });
+      } else {
+        await addDoc(collection(this.firestore, 'conversations'), {
+          userId: this.userId,
+          userName: intakeData.nome,
+          status: 'queued',
+          createdAt: serverTimestamp(),
+          queuedAt: serverTimestamp(),
+          lastMessage: { text: 'Solicitação de atendimento iniciada', timestamp: serverTimestamp() },
+          intakeData: intakeData
+        });
+      }
+    } catch (e) {
+      console.error("Erro intake:", e);
+      alert("Erro ao enviar formulário.");
+    }
   }
 
-  async submitIntakeForm(form: NgForm) {
-    if (form.invalid || !this.currentUser) return;
-    const formData = form.value as IntakeData;
-    const uid = this.currentUser.uid;
+  listenToQueuePosition(myQueuedAt: any) {
+    if (!myQueuedAt) return;
+    const q = query(
+      collection(this.firestore, 'conversations'),
+      where('status', '==', 'queued'),
+      orderBy('queuedAt', 'asc')
+    );
     
-    // Auto-preenchimento
-    if (formData.modoComunicacao === 'GPRS') formData.ip = '10.1.1.58';
-    if (formData.modoComunicacao === 'V2COM') formData.ip = '10.74.150.20';
-    if (formData.modoComunicacao === 'TELESPAZIO') formData.porta = '20000';
+    this.queueUnsub = onSnapshot(q, (snapshot) => {
+      let pos = 1;
+      for (const d of snapshot.docs) {
+        if (d.id === this.conversationId) {
+          this.queuePosition.set(pos);
+          break;
+        }
+        pos++;
+      }
+    });
+  }
 
-    const welcomeMessageText = `Bem vindo ao Bot do NOC, ${formData.nome}!\n\nSeu atendimento foi iniciado...`; // (Resumido para caber)
-    
-    const newConversation = {
-      status: 'queued', queuedAt: serverTimestamp(), intakeData: formData, 
-      lastMessage: { text: "Cliente entrou na fila de atendimento.", timestamp: serverTimestamp() },
-      userId: uid, userName: formData.nome, unreadByDashboard: true
-    };
-    
-    await addDoc(collection(this.firestore, 'conversations'), newConversation);
-    const localWelcomeMessage: Message = {
-      id: 'local-welcome-msg', text: welcomeMessageText, senderId: uid, 
-      timestamp: Timestamp.now()
-    };
-    this.localWelcomeMessage.next(localWelcomeMessage);
+  loadMessages(convId: string) {
+    const messagesRef = collection(this.firestore, `conversations/${convId}/messages`);
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+    this.messages$ = new Observable((observer) => {
+      return onSnapshot(q, (snap) => {
+        const msgs = snap.docs.map(d => d.data() as Message);
+        observer.next(msgs);
+        setTimeout(() => { this.shouldScrollToBottom = true; }, 100);
+      });
+    });
   }
 
   async sendMessage(form: NgForm) {
-    const convoId = this.currentConversationId(); 
-    if (!this.currentUser || !convoId) {
-      if (this.conversationStatus() === 'closed') { 
-        form.reset();
-        this.localWelcomeMessage.next(null);
-        this.currentConversationId.set(null); 
-        this.conversationStatus.set('pending_intake'); 
-      }
-      return; 
-    }
-    
-    if (form.invalid) return;
+    if (form.invalid || !this.conversationId || !this.userId) return;
+    const text = form.value.message;
 
-    const messageText = form.value.message;
-    const uid = this.currentUser.uid;
-    const newMessage: Message = {
-      text: messageText,
-      senderId: uid, 
-      timestamp: serverTimestamp() as Timestamp
-    };
-    
-    await addDoc(collection(this.firestore, `conversations/${convoId}/messages`), newMessage);
-    await setDoc(doc(this.firestore, `conversations/${convoId}`), {
-      lastMessage: { text: messageText, timestamp: serverTimestamp() },
+    await addDoc(collection(this.firestore, `conversations/${this.conversationId}/messages`), {
+      text: text,
+      senderId: this.userId,
+      timestamp: serverTimestamp()
+    });
+
+    await updateDoc(doc(this.firestore, `conversations/${this.conversationId}`), {
+      lastMessage: { text: text, timestamp: serverTimestamp() },
       unreadByDashboard: true
-    }, { merge: true }); 
+    });
 
-    this.chatForm.reset();
+    form.reset();
+    this.shouldScrollToBottom = true;
   }
 
-  // --- LÓGICA UNIFICADA DE UPLOAD (ARQUIVO OU BLOB) ---
-  
-  // 1. Acionado pelo input de arquivo (Galeria ou Câmera)
+  async logout() {
+    await signOut(this.auth);
+    window.location.reload();
+  }
+
   onFileSelected(event: any) {
-    const file: File = event.target.files[0];
-    const convoId = this.currentConversationId();
-    if (file && convoId) {
-      this.uploadToStorage(file, convoId, file.name);
+    const file = event.target.files[0];
+    if (file && this.conversationId) {
+      this.uploadToStorage(file);
     }
-    event.target.value = ''; 
+    event.target.value = '';
   }
 
-  // 2. Função genérica que envia para o Firebase
-  uploadToStorage(fileOrBlob: File | Blob, conversationId: string, fileName: string) {
+  uploadToStorage(file: File | Blob) {
+    if (!this.conversationId) return;
     this.isUploading.set(true);
-    const filePath = `chat_media/${conversationId}/${Date.now()}_${fileName}`;
-    const storageRef = ref(this.storage, filePath);
-    const task = uploadBytesResumable(storageRef, fileOrBlob);
+    const path = `chat_media/${this.conversationId}/${Date.now()}_${(file as File).name || 'audio.webm'}`;
+    const storageRef = ref(this.storage, path);
+    const task = uploadBytesResumable(storageRef, file);
 
-    task.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        this.uploadPercentage.set(progress);
+    task.on('state_changed', 
+      (snap) => {
+        this.uploadPercentage.set((snap.bytesTransferred / snap.totalBytes) * 100);
       },
-      (error) => {
-        console.error(error);
+      (err) => {
+        console.error(err);
         this.isUploading.set(false);
-        alert('Erro ao enviar.');
       },
       async () => {
-        const downloadURL = await getDownloadURL(task.snapshot.ref);
-        await this.sendMediaMessage(downloadURL, fileOrBlob.type, fileName, conversationId);
+        const url = await getDownloadURL(task.snapshot.ref);
+        await this.sendMediaMessage(url, file.type);
         this.isUploading.set(false);
       }
     );
   }
 
-  async sendMediaMessage(url: string, mimeType: string, fileName: string, convoId: string) {
+  async sendMediaMessage(url: string, mimeType: string) {
     let type: 'image' | 'video' | 'audio' = 'image';
     if (mimeType.startsWith('video')) type = 'video';
     if (mimeType.startsWith('audio')) type = 'audio';
 
-    const msg: Message = {
-      senderId: this.currentUser!.uid,
-      timestamp: serverTimestamp() as Timestamp,
+    await addDoc(collection(this.firestore, `conversations/${this.conversationId}/messages`), {
+      senderId: this.userId,
+      timestamp: serverTimestamp(),
       mediaUrl: url,
-      mediaType: type,
-      fileName: fileName
-    };
-
-    await addDoc(collection(this.firestore, `conversations/${convoId}/messages`), msg);
-    await setDoc(doc(this.firestore, `conversations/${convoId}`), {
-      lastMessage: { text: type === 'audio' ? '🎵 Áudio' : '📷 Mídia', timestamp: serverTimestamp() },
+      mediaType: type
+    });
+    
+    await updateDoc(doc(this.firestore, `conversations/${this.conversationId}`), {
+      lastMessage: { text: 'Mídia enviada', timestamp: serverTimestamp() },
       unreadByDashboard: true
-    }, { merge: true });
+    });
+    this.shouldScrollToBottom = true;
   }
-
-  // --- LÓGICA DE GRAVAÇÃO DE ÁUDIO (MICROFONE) ---
 
   async toggleRecording() {
     if (this.isRecording()) {
@@ -282,40 +332,23 @@ export class Chat implements OnInit, OnDestroy {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(stream);
       this.audioChunks = [];
-
-      this.mediaRecorder.ondataavailable = (event) => {
-        this.audioChunks.push(event.data);
-      };
-
+      this.mediaRecorder.ondataavailable = (e) => this.audioChunks.push(e.data);
       this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        const convoId = this.currentConversationId();
-        if (convoId) {
-          // Envia o Blob de áudio como se fosse um arquivo
-          this.uploadToStorage(audioBlob, convoId, 'gravacao_voz.webm');
-        }
-        // Para todas as faixas de áudio para desligar o microfone
-        stream.getTracks().forEach(track => track.stop());
+        const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        this.uploadToStorage(blob);
+        stream.getTracks().forEach(t => t.stop());
       };
-
       this.mediaRecorder.start();
       this.isRecording.set(true);
-
-    } catch (err) {
-      console.error("Erro ao acessar microfone:", err);
-      alert("Não foi possível acessar o microfone. Verifique as permissões.");
+    } catch(err) {
+      alert("Não foi possível acessar o microfone.");
     }
   }
 
   stopRecording() {
-    if (this.mediaRecorder) {
+    if (this.mediaRecorder && this.isRecording()) {
       this.mediaRecorder.stop();
       this.isRecording.set(false);
     }
-  }
-
-  async logout() {
-    await signOut(this.auth);
-    this.router.navigate(['/login']);
   }
 }

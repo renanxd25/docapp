@@ -21,12 +21,23 @@
           <form #intakeForm="ngForm" (ngSubmit)="submitIntakeForm(intakeForm)">
             
             <div class="form-group">
-              <label>1. NOME:</label>
-              <input type="text" name="nome" ngModel required placeholder="Seu nome completo" oninput="this.value = this.value.toUpperCase()">
+              <label>1. NOME E SOBRENOME:</label>
+              <input type="text" name="nome" ngModel required placeholder="Seu nome e sobrenome" oninput="this.value = this.value.toUpperCase()">
+            </div>
+
+            <div class="form-group">
+              <label>2. TELEFONE:</label>
+              <input 
+                type="text" 
+                name="telefone" 
+                ngModel 
+                required 
+                placeholder="(99) 99999-9999" 
+                (input)="formatPhone($event)">
             </div>
             
             <div class="form-group">
-              <label>2. DISTRIBUIDORA:</label>
+              <label>3. DISTRIBUIDORA:</label>
               <select name="distribuidora" ngModel required #distribuidora="ngModel">
                 <option value="" disabled selected>Selecione...</option>
                 <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
@@ -42,7 +53,7 @@
             </div>
 
             <div class="form-group">
-              <label>3. REGIONAL:</label>
+              <label>4. REGIONAL:</label>
               @if (regionalsByState[distribuidora.value] && regionalsByState[distribuidora.value].length > 0) {
                 <select name="regional" ngModel required>
                   <option value="" disabled selected>Selecione...</option>
@@ -60,7 +71,7 @@
             </div>
             
             <div class="form-group">
-              <label>4. OPÇÃO DE ATENDIMENTO:</label>
+              <label>5. OPÇÃO DE ATENDIMENTO:</label>
               <select name="opcaoAtendimento" ngModel required>
                 <option value="" disabled selected>Selecione...</option>
                 <option value="COMISSIONAMENTO">COMISSIONAMENTO</option>
@@ -73,17 +84,17 @@
             </div>
 
             <div class="form-group">
-              <label>5. SIGLA SE E AL:</label>
+              <label>6. SIGLA SE E AL:</label>
               <input type="text" name="siglaSEAL" ngModel required oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <div class="form-group">
-              <label>6. COMPONENTE:</label>
+              <label>7. COMPONENTE:</label>
               <input type="text" name="componente" ngModel required oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <div class="form-group">
-              <label>7. MODELO DO CONTROLE:</label>
+              <label>8. MODELO DO CONTROLE:</label>
               <select name="modeloControle" ngModel required>
                 <option value="" disabled selected>Selecione...</option>
                 <option value="ADATECH">ADATECH</option>
@@ -106,7 +117,7 @@
             </div>
             
             <div class="form-group">
-              <label>8. MODO DE COMUNICAÇÃO:</label>
+              <label>9. MODO DE COMUNICAÇÃO:</label>
               <select name="modoComunicacao" ngModel required #modo="ngModel">
                 <option value="" disabled selected>Selecione...</option>
                 <option value="GPRS">GPRS</option>
@@ -115,6 +126,7 @@
                 <option value="FIBRA">FIBRA</option>
                 <option value="RÁDIO">RÁDIO</option>
                 <option value="V2COM">V2COM</option>
+                <option value="KOALA">KOALA</option>
                 <option value="SENSOR MT">SENSOR MT</option>
               </select>
             </div>
@@ -132,7 +144,7 @@
             }
 
             <div class="form-group">
-              <label>9. IP:</label>
+              <label>10. IP:</label>
               @if (modo.value === 'GPRS') {
                 @if (intakeForm.value.tipoGprs === 'CAS') {
                   <input type="text" name="ip" value="10.1.1.58" disabled style="background-color: #e9ecef;">
@@ -159,7 +171,7 @@
             </div>
 
             <div class="form-group">
-              <label>10. PORTA:</label>
+              <label>11. PORTA:</label>
               @if (modo.value === 'TELESPAZIO' || modo.value === 'FIBRA') {
                 <input type="text" name="porta" value="20000" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="20000">
