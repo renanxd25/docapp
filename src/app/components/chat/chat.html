@@ -40,38 +40,15 @@
               <label>3. DISTRIBUIDORA:</label>
               <select name="distribuidora" ngModel required #distribuidora="ngModel">
                 <option value="" disabled selected>Selecione...</option>
-                <!--<option value="AC">AC</option>-->
-                <option value="AL">AL</option>
-                <option value="AP">AP</option>
-               <!-- <option value="AM">AM</option>
-                <option value="BA">BA</option>
-                <option value="CE">CE</option>
-                <option value="DF">DF</option>
-                <option value="ES">ES</option> -->
-                <option value="GO">GO</option>
-                <option value="MA">MA</option>
-               <!-- <option value="MT">MT</option>
-                <option value="MS">MS</option>
-                <option value="MG">MG</option> -->
-                <option value="PA">PA</option>
-               <!-- <option value="PB">PB</option>
-                <option value="PR">PR</option>
-                <option value="PE">PE</option>-->
-                <option value="PI">PI</option>
-               <!-- <option value="RJ">RJ</option>
-                <option value="RN">RN</option> -->
-                <option value="RS">RS</option>
-               <!-- <option value="RO">RO</option>
-                <option value="RR">RR</option>
-                <option value="SC">SC</option>
-                <option value="SP">SP</option>
-                <option value="SE">SE</option>
-                <option value="TO">TO</option> -->
+                @for (estado of distribuidorasKeys; track estado) {
+                  <option [value]="estado">{{ estado }}</option>
+                }
               </select>
             </div>
+
             <div class="form-group">
               <label>4. REGIONAL:</label>
-              @if (regionalsByState[distribuidora.value] && regionalsByState[distribuidora.value].length > 0) {
+              @if (regionalsByState[distribuidora.value] && regionalsByState[distribuidora.value].length > 0) { 
                 <select name="regional" ngModel required>
                   <option value="" disabled selected>Selecione...</option>
                   @for (regional of regionalsByState[distribuidora.value]; track regional) {
@@ -89,7 +66,11 @@
             
             <div class="form-group">
               <label>5. OPÇÃO DE ATENDIMENTO:</label>
-              <select name="opcaoAtendimento" ngModel required>
+              <select 
+                name="opcaoAtendimento" 
+                [(ngModel)]="selectedOpcao" 
+                (change)="onOpcaoChange()" 
+                required>
                 <option value="" disabled selected>Selecione...</option>
                 <option value="COMISSIONAMENTO">COMISSIONAMENTO</option>
                 <option value="VERIFICAR COMUNICAÇÃO">VERIFICAR COMUNICAÇÃO</option>
@@ -102,12 +83,24 @@
 
             <div class="form-group">
               <label>6. SIGLA SE E AL:</label>
-              <input type="text" name="siglaSEAL" ngModel required oninput="this.value = this.value.toUpperCase()">
+              <input 
+                type="text" 
+                name="siglaSEAL" 
+                ngModel 
+                required 
+                (input)="formatAlphaNumeric($event)"
+                placeholder="Apenas letras, números e hífen">
             </div>
             
             <div class="form-group">
               <label>7. COMPONENTE:</label>
-              <input type="text" name="componente" ngModel required oninput="this.value = this.value.toUpperCase()">
+              <input 
+                type="text" 
+                name="componente" 
+                ngModel 
+                required 
+                (input)="formatAlphaNumeric($event)"
+                placeholder="Apenas letras, números e hífen">
             </div>
             
             <div class="form-group">
@@ -135,7 +128,12 @@
             
             <div class="form-group">
               <label>9. MODO DE COMUNICAÇÃO:</label>
-              <select name="modoComunicacao" ngModel required #modo="ngModel">
+              <select 
+                name="modoComunicacao" 
+                [(ngModel)]="selectedModo" 
+                required 
+                #modo="ngModel"
+                [disabled]="selectedOpcao === 'CADASTRO DE PORTA HUGHES'">
                 <option value="" disabled selected>Selecione...</option>
                 <option value="GPRS">GPRS</option>
                 <option value="BGAN">BGAN</option>
@@ -143,8 +141,6 @@
                 <option value="FIBRA">FIBRA</option>
                 <option value="RÁDIO">RÁDIO</option>
                 <option value="V2COM">V2COM</option>
-                <!--<option value="KOALA">KOALA</option>
-                <option value="SENSOR MT">SENSOR MT</option>-->
               </select>
             </div>
 
@@ -193,7 +189,7 @@
                 <input type="text" name="porta" value="20000" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="20000">
               } 
-              @else if (intakeForm.value.opcaoAtendimento === 'CADASTRO DE PORTA HUGHES' && modo.value === 'BGAN') {
+              @else if (selectedOpcao === 'CADASTRO DE PORTA HUGHES' && modo.value === 'BGAN') {
                 <input type="text" name="porta" value="CONSULTAR VELP" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="CONSULTAR VELP">
               }
@@ -231,12 +227,27 @@
               } 
               @else if (msg.mediaUrl && msg.mediaType === 'image') {
                 <img [src]="msg.mediaUrl" alt="Foto" class="chat-media-img">
+                
+                <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Salvar
+                </a>
+
               } 
               @else if (msg.mediaUrl && msg.mediaType === 'video') {
                 <video controls [src]="msg.mediaUrl" class="chat-media-video"></video>
+                
+                <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Salvar
+                </a>
+
               } 
               @else if (msg.mediaUrl && msg.mediaType === 'audio') {
                 <audio controls [src]="msg.mediaUrl" class="chat-media-audio"></audio>
+                
+                <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Salvar
+                </a>
+
               }
 
               <span class="timestamp">
@@ -281,9 +292,24 @@
             <div class="avatar-wrapper" *ngIf="msg.senderId !== userId"><i class="fa-solid fa-robot"></i></div>
             <div class="message-bubble" [ngClass]="{ 'client-bubble': msg.senderId === userId, 'admin-bubble': msg.senderId !== userId }">
               @if(msg.text) { <p [innerHTML]="msg.text | preformat"></p> } 
-              @else if (msg.mediaUrl && msg.mediaType === 'image') { <img [src]="msg.mediaUrl" class="chat-media-img"> } 
-              @else if (msg.mediaUrl && msg.mediaType === 'video') { <video controls [src]="msg.mediaUrl" class="chat-media-video"></video> } 
-              @else if (msg.mediaUrl && msg.mediaType === 'audio') { <audio controls [src]="msg.mediaUrl" class="chat-media-audio"></audio> }
+              @else if (msg.mediaUrl && msg.mediaType === 'image') { 
+                <img [src]="msg.mediaUrl" class="chat-media-img"> 
+                <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Salvar
+                </a>
+              } 
+              @else if (msg.mediaUrl && msg.mediaType === 'video') { 
+                <video controls [src]="msg.mediaUrl" class="chat-media-video"></video> 
+                <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Salvar
+                </a>
+              } 
+              @else if (msg.mediaUrl && msg.mediaType === 'audio') { 
+                <audio controls [src]="msg.mediaUrl" class="chat-media-audio"></audio> 
+                <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Salvar
+                </a>
+              }
               
               <span class="timestamp">{{ msg.timestamp.toDate() | date:'HH:mm' }}</span>
             </div>

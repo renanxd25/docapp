@@ -21,7 +21,7 @@ interface Message {
 
 interface IntakeData {
   nome: string;
-  telefone: string; // Adicionado
+  telefone: string;
   distribuidora: string;
   regional: string;
   opcaoAtendimento: string;
@@ -29,7 +29,7 @@ interface IntakeData {
   componente: string;
   modeloControle: string;
   modoComunicacao: string;
-  tipoGprs?: string; // Adicionado
+  tipoGprs?: string;
   ip?: string;
   porta?: string;
 }
@@ -57,39 +57,27 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   uploadPercentage = signal(0);
   isRecording = signal(false);
 
+  // Variáveis de controle do formulário
+  selectedOpcao: string = '';
+  selectedModo: string = '';
+
   private convoUnsub: Unsubscribe | null = null;
   private queueUnsub: Unsubscribe | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: any[] = [];
 
   regionalsByState: { [key: string]: string[] } = {
-    'MA': ['SUL', 'LESTE', 'CENTRO', 'NORTE'],
-    'PI': ['METROPOLITANA', 'NORTE', 'SUL', 'CENTRO'],
-    'CE': ['METROPOLITANA', 'NORTE', 'SUL', 'CENTRO', 'LESTE', 'OESTE'],
-    'GO': ['METROPOLITANA', 'SUL', 'NORTE', 'LESTE', 'OESTE'],
-    'TO': ['NORTE', 'SUL', 'CENTRO'],
-    'MT': ['NORTE', 'SUL', 'LESTE', 'OESTE', 'CENTRO'],
-    'MS': ['CAMPO GRANDE', 'DOURADOS', 'TRÊS LAGOAS', 'CORUMBÁ'],
-    'ES': ['NORTE', 'SUL', 'CENTRO', 'SERRANA'],
-    'BA': ['SALVADOR', 'FEIRA DE SANTANA', 'VITÓRIA DA CONQUISTA', 'ITABUNA', 'BARREIRAS'],
-    'SP': ['CAPITAL', 'GRANDE SP', 'INTERIOR', 'LITORAL'],
-    'RJ': ['CAPITAL', 'BAIXADA', 'NITERÓI', 'INTERIOR'],
-    'MG': ['BH', 'TRIÂNGULO', 'SUL', 'NORTE', 'LESTE'],
-    'PR': ['CURITIBA', 'LONDRINA', 'MARINGÁ', 'OESTE'],
-    'SC': ['FLORIANÓPOLIS', 'JOINVILLE', 'BLUMENAU', 'OESTE'],
-    'RS': ['PORTO ALEGRE', 'CAXIAS', 'PELOTAS', 'SANTA MARIA'],
-    'PE': ['RECIFE', 'CARUARU', 'PETROLINA', 'MATA SUL'],
-    'AC': ['CAPITAL', 'INTERIOR'],
-    'AL': ['CAPITAL', 'INTERIOR'],
-    'AP': ['CAPITAL', 'INTERIOR'],
-    'AM': ['CAPITAL', 'INTERIOR'],
-    'DF': ['BRASÍLIA'],
-    'PB': ['JOÃO PESSOA', 'CAMPINA GRANDE', 'SERTÃO'],
-    'RN': ['NATAL', 'MOSSORÓ', 'SERIDÓ'],
-    'RO': ['CAPITAL', 'INTERIOR'],
-    'RR': ['CAPITAL', 'INTERIOR'],
-    'SE': ['CAPITAL', 'INTERIOR']
+    'AL': ['CENTRO', 'LESTE', 'OESTE'],
+    'AP': ['AP'],
+    'MA': ['CENTRO', 'LESTE', 'NOROESTE', 'NORTE', 'SUL'],
+    'PA': ['CENTRO', 'LESTE', 'NORDESTE', 'NOROESTE', 'NORTE', 'OESTE', 'SUL'],
+    'PI': ['CENTRO-SUL', 'METROPOLITANA', 'NORTE', 'SUL'],
+    'RS': ['CAMPANHA', 'CARBONIFERA', 'CENTRO', 'LITORAL NORTE', 'LITORAL SUL', 'METROPOLITANA', 'NORDESTE', 'NORTE', 'PORTO ALEGRE', 'SUL']
   };
+
+  get distribuidorasKeys() {
+    return Object.keys(this.regionalsByState).sort();
+  }
 
   @ViewChild('messagesArea') private messagesAreaElement!: ElementRef;
   private shouldScrollToBottom = false;
@@ -123,12 +111,26 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     } catch(err) { }
   }
 
-  // MÁSCARA DE TELEFONE
   formatPhone(event: any) {
     let v = event.target.value.replace(/\D/g, "");
     v = v.replace(/^(\d\d)(\d)/g, "($1) $2");
     v = v.replace(/(\d{5})(\d)/, "$1-$2");
     event.target.value = v.substring(0, 15);
+  }
+
+  formatAlphaNumeric(event: any) {
+    let v = event.target.value;
+    v = v.toUpperCase();
+    v = v.replace(/[^A-Z0-9-]/g, "");
+    event.target.value = v;
+  }
+
+  onOpcaoChange() {
+    if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
+      this.selectedModo = 'BGAN';
+    } else {
+      this.selectedModo = ''; 
+    }
   }
 
   async checkActiveConversation() {
@@ -172,17 +174,22 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     const ipFinal = formData.ipHidden || formData.ip;
     const portaFinal = formData.portaHidden || formData.porta;
 
+    let modoFinal = formData.modoComunicacao;
+    if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
+      modoFinal = 'BGAN';
+    }
+
     const intakeData: IntakeData = {
       nome: formData.nome,
-      telefone: formData.telefone, // Capturando Telefone
+      telefone: formData.telefone,
       distribuidora: formData.distribuidora,
       regional: formData.regional,
       opcaoAtendimento: formData.opcaoAtendimento,
       siglaSEAL: formData.siglaSEAL,
       componente: formData.componente,
       modeloControle: formData.modeloControle,
-      modoComunicacao: formData.modoComunicacao,
-      tipoGprs: formData.tipoGprs || null, // Capturando Tipo GPRS
+      modoComunicacao: modoFinal,
+      tipoGprs: formData.tipoGprs || null,
       ip: ipFinal,
       porta: portaFinal
     };
@@ -349,6 +356,43 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     if (this.mediaRecorder && this.isRecording()) {
       this.mediaRecorder.stop();
       this.isRecording.set(false);
+    }
+  }
+
+  // --- NOVO MÉTODO: FORÇA O DOWNLOAD VIA BLOB ---
+  async downloadMedia(url: string, type: 'image' | 'video' | 'audio' | undefined) {
+    if (!url) return;
+    try {
+      // Busca o conteúdo do arquivo
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      // Cria uma URL temporária para o Blob
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Define a extensão baseada no tipo (simplificado)
+      let extension = '';
+      if (type === 'image') extension = 'jpg'; // O browser pode corrigir
+      else if (type === 'video') extension = 'mp4';
+      else if (type === 'audio') extension = 'webm';
+      
+      const fileName = `arquivo_${new Date().getTime()}.${extension}`;
+
+      // Cria um link invisível e clica nele
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpeza
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+
+    } catch (error) {
+      console.error('Erro ao baixar mídia:', error);
+      // Fallback: Se der erro (ex: CORS), abre em nova aba
+      window.open(url, '_blank');
     }
   }
 }
