@@ -4,7 +4,7 @@
     <div class="header-info">
       <div class="avatar-icon-wrapper"><i class="fa-solid fa-robot"></i></div>
       <div class="text-info">
-        <h3>Atendimento ao Cliente</h3>
+        <h3>NOC Atendimento</h3>
         <span class="status-dot online"></span><span class="status-text">Online</span>
       </div>
     </div>
@@ -72,28 +72,39 @@
                 (change)="onOpcaoChange()" 
                 required>
                 <option value="" disabled selected>Selecione...</option>
-                <option value="COMISSIONAMENTO">COMISSIONAMENTO</option>
-                <option value="VERIFICAR COMUNICAÇÃO">VERIFICAR COMUNICAÇÃO</option>
                 <option value="CADASTRO DE PORTA HUGHES">CADASTRO DE PORTA HUGHES</option>
-                <option value="TROCA DE PORTA GPRS">TROCA DE PORTA GPRS</option>
+                <option value="COMISSIONAMENTO">COMISSIONAMENTO</option>
+                <option value="TROCA DE PORTA">TROCA DE PORTA</option>
                 <option value="TROCA DE TECNOLOGIA DE COMUNICAÇÃO">TROCA DE TECNOLOGIA DE COMUNICAÇÃO</option>
+                <option value="VERIFICAR COMUNICAÇÃO">VERIFICAR COMUNICAÇÃO</option>
                 <option value="VOLTAR COMUNICAÇÃO">VOLTAR COMUNICAÇÃO</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>6. SIGLA SE E AL:</label>
+              <label>6. INFORME A SUBESTAÇÃO:</label>
               <input 
                 type="text" 
-                name="siglaSEAL" 
+                name="subestacao" 
                 ngModel 
                 required 
                 (input)="formatAlphaNumeric($event)"
-                placeholder="Apenas letras, números e hífen">
+                placeholder="Ex: SE-123">
+            </div>
+
+            <div class="form-group">
+              <label>7. INFORME O ALIMENTADOR:</label>
+              <input 
+                type="text" 
+                name="alimentador" 
+                ngModel 
+                required 
+                (input)="formatAlphaNumeric($event)"
+                placeholder="Ex: AL-01">
             </div>
             
             <div class="form-group">
-              <label>7. COMPONENTE:</label>
+              <label>8. COMPONENTE:</label>
               <input 
                 type="text" 
                 name="componente" 
@@ -104,30 +115,49 @@
             </div>
             
             <div class="form-group">
-              <label>8. MODELO DO CONTROLE / SENSOR:</label>
-              <select name="modeloControle" ngModel required>
+              <label>9. CLASSE DO COMPONENTE:</label>
+              <select 
+                name="classeComponente" 
+                [(ngModel)]="selectedClasse" 
+                (change)="onClasseChange()" 
+                required>
                 <option value="" disabled selected>Selecione...</option>
-                <option value="ADATECH">ADATECH</option>
-                <option value="SEL 651R">SEL 651R</option>
-                <option value="SEL 751">SEL 751</option>
-                <option value="ADVC3">ADVC3</option>
-                <option value="ADVC">ADVC</option>
-                <option value="NOJA">NOJA</option>
-                <option value="TAVRIDA">TAVRIDA</option>
-                <option value="RUA">RUA</option>
-                <option value="TAPELETRO">TAPELETRO</option>
-                <option value="CTR2">CTR2</option>
-                <option value="CTR3">CTR3</option>
-                <option value="FORM6">FORM6</option>
-                <option value="G&W">G&W</option>
-                <option value="SENSOR MT">SENSOR MT</option>
-                <option value="KOALA">KOALA</option>
-                <option value="NENHUM">NENHUM</option>
+                @for (classe of classesOptions; track classe) {
+                  <option [value]="classe">{{ classe }}</option>
+                }
               </select>
             </div>
             
+            @if (selectedClasse) {
+                <div class="form-group">
+                  <label>10. MODELO:</label>
+                  <select 
+                    name="modelo" 
+                    [(ngModel)]="selectedModelo" 
+                    (change)="onModeloChange()" 
+                    required>
+                    <option value="" disabled selected>Selecione o modelo...</option>
+                    @for (modelo of currentModelsOptions; track modelo) {
+                      <option [value]="modelo">{{ modelo }}</option>
+                    }
+                  </select>
+                </div>
+            }
+
+            @if (selectedClasse === 'RELIGADOR' && selectedModelo) {
+                <div class="form-group">
+                  <label>11. RELÉ:</label>
+                  <select name="rele" [(ngModel)]="selectedRele" required>
+                    <option value="" disabled selected>Selecione o relé...</option>
+                    @for (rele of currentRelaysOptions; track rele) {
+                      <option [value]="rele">{{ rele }}</option>
+                    }
+                  </select>
+                </div>
+            }
+            
             <div class="form-group">
-              <label>9. MODO DE COMUNICAÇÃO:</label>
+              <label>12. MEIO DE COMUNICAÇÃO:</label>
               <select 
                 name="modoComunicacao" 
                 [(ngModel)]="selectedModo" 
@@ -136,11 +166,10 @@
                 [disabled]="selectedOpcao === 'CADASTRO DE PORTA HUGHES'">
                 <option value="" disabled selected>Selecione...</option>
                 <option value="GPRS">GPRS</option>
-                <option value="BGAN">BGAN</option>
-                <option value="TELESPAZIO">TELESPAZIO</option>
+                <option value="SATELITAL">SATELITAL</option>
                 <option value="FIBRA">FIBRA</option>
                 <option value="RÁDIO">RÁDIO</option>
-                <option value="V2COM">V2COM</option>
+                <!--<option value="V2COM">V2COM</option>-->
               </select>
             </div>
 
@@ -156,8 +185,31 @@
               </div>
             }
 
+            @if (modo.value === 'SATELITAL') {
+              <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
+                <label style="color: #007bff;">↳ SELECIONE O TIPO DE SATELITAL:</label>
+                <select name="tipoSatelital" ngModel required>
+                  <option value="" disabled selected>Selecione o tipo...</option>
+                  <option value="BGAN">BGAN</option>
+                  <option value="TELESPAZIO">TELESPAZIO</option>
+                </select>
+              </div>
+            }
+
+            @if (modo.value === 'FIBRA') {
+              <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
+                <label style="color: #007bff;">↳ SELECIONE O TIPO DE FIBRA:</label>
+                <select name="tipoFibra" ngModel required>
+                  <option value="" disabled selected>Selecione o tipo...</option>
+                  <option value="SERIAL">SERIAL</option>
+                  <option value="ETHERNET">ETHERNET</option>
+                </select>
+              </div>
+            }
+
             <div class="form-group">
-              <label>10. IP:</label>
+              <label>13. IP:</label>
+              
               @if (modo.value === 'GPRS') {
                 @if (intakeForm.value.tipoGprs === 'CAS') {
                   <input type="text" name="ip" value="10.1.1.58" disabled style="background-color: #e9ecef;">
@@ -172,27 +224,63 @@
                    <input type="hidden" name="ipHidden" ngModel="10.82.149.2">
                 } 
                 @else {
-                  <input type="text" name="ip" placeholder="Selecione o tipo de GPRS acima..." disabled>
+                  <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de GPRS acima..." disabled>
                 }
               }
-              @else if (modo.value === 'BGAN') {
-                <input type="text" name="ip" ngModel required placeholder="Digite o IP GLOBAL" oninput="this.value = this.value.toUpperCase()">
+
+              @else if (modo.value === 'SATELITAL') {
+                @if (intakeForm.value.tipoSatelital === 'BGAN') {
+                  <input type="text" name="ip" ngModel required placeholder="Digite o IP GLOBAL" oninput="this.value = this.value.toUpperCase()">
+                } 
+                @else if (intakeForm.value.tipoSatelital === 'TELESPAZIO') {
+                  <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
+                }
+                @else {
+                  <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de Satelital..." disabled>
+                }
               }
+
+              @else if (modo.value === 'FIBRA') {
+                @if (intakeForm.value.tipoFibra) {
+                   <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
+                } @else {
+                  <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de Fibra..." disabled>
+                }
+              }
+
               @else {
                 <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
               }
             </div>
 
             <div class="form-group">
-              <label>11. PORTA:</label>
-              @if (modo.value === 'TELESPAZIO' || modo.value === 'FIBRA') {
-                <input type="text" name="porta" value="20000" disabled style="background-color: #e9ecef;">
+              <label>14. PORTA:</label>
+              
+              @if (modo.value === 'SATELITAL' && intakeForm.value.tipoSatelital === 'TELESPAZIO') {
+                <input type="text" name="portaDisplay" value="20000" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="20000">
-              } 
-              @else if (selectedOpcao === 'CADASTRO DE PORTA HUGHES' && modo.value === 'BGAN') {
-                <input type="text" name="porta" value="CONSULTAR VELP" disabled style="background-color: #e9ecef;">
+              }
+              
+              @else if (modo.value === 'FIBRA' && intakeForm.value.tipoFibra === 'SERIAL') {
+                <input type="text" name="portaDisplay" value="2000" disabled style="background-color: #e9ecef;">
+                <input type="hidden" name="portaHidden" ngModel="2000">
+              }
+
+              @else if (modo.value === 'RÁDIO' && distribuidora.value === 'PA') {
+                 <input type="text" name="portaDisplay" value="CONSULTAR SCADA" disabled style="background-color: #e9ecef; color: #dc3545; font-weight: bold;">
+                 <input type="hidden" name="portaHidden" ngModel="CONSULTAR SCADA">
+              }
+
+              @else if (modo.value === 'RÁDIO') {
+                <input type="text" name="portaDisplay" value="2000" disabled style="background-color: #e9ecef;">
+                <input type="hidden" name="portaHidden" ngModel="2000">
+              }
+              
+              @else if (selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
+                <input type="text" name="portaDisplay" value="CONSULTAR VELP" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="CONSULTAR VELP">
               }
+
               @else {
                 <input type="number" name="porta" ngModel required placeholder="Digite a porta">
               }
@@ -227,27 +315,21 @@
               } 
               @else if (msg.mediaUrl && msg.mediaType === 'image') {
                 <img [src]="msg.mediaUrl" alt="Foto" class="chat-media-img">
-                
                 <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
                   <i class="fa-solid fa-download"></i> Salvar
                 </a>
-
               } 
               @else if (msg.mediaUrl && msg.mediaType === 'video') {
                 <video controls [src]="msg.mediaUrl" class="chat-media-video"></video>
-                
                 <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
                   <i class="fa-solid fa-download"></i> Salvar
                 </a>
-
               } 
               @else if (msg.mediaUrl && msg.mediaType === 'audio') {
                 <audio controls [src]="msg.mediaUrl" class="chat-media-audio"></audio>
-                
                 <a (click)="downloadMedia(msg.mediaUrl!, msg.mediaType)" class="download-link" style="display: block; margin-top: 5px; font-size: 0.8rem; color: #fff; text-decoration: none; cursor: pointer;">
                   <i class="fa-solid fa-download"></i> Salvar
                 </a>
-
               }
 
               <span class="timestamp">

@@ -25,11 +25,23 @@ interface IntakeData {
   distribuidora: string;
   regional: string;
   opcaoAtendimento: string;
-  siglaSEAL: string;
+  
+  // NOVOS CAMPOS SEPARADOS
+  subestacao: string;
+  alimentador: string;
+  
   componente: string;
-  modeloControle: string;
+  classeComponente: string;
+  modelo: string;
+  rele?: string; 
+
   modoComunicacao: string;
+  
+  // CAMPOS ESPECÍFICOS DE SUB-SELEÇÃO
   tipoGprs?: string;
+  tipoSatelital?: string; // Novo
+  tipoFibra?: string;     // Novo
+  
   ip?: string;
   porta?: string;
 }
@@ -61,14 +73,38 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   selectedOpcao: string = '';
   selectedModo: string = '';
 
+  // Novas variáveis para os selects dependentes
+  selectedClasse: string = '';
+  selectedModelo: string = '';
+  selectedRele: string = '';
+
   private convoUnsub: Unsubscribe | null = null;
   private queueUnsub: Unsubscribe | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: any[] = [];
 
+  // Mapeamento: Classe -> Lista de Modelos
+  modelsByClass: { [key: string]: string[] } = {
+    'CHAVE TELECOMANDA': ['BONOMI', 'IMS'],
+    'RELIGADOR': ['ARTECHE', 'COOPER', 'G&W', 'NOJA', 'SCHNEIDER', 'SIEMENS', 'TAVRIDA'],
+    'SENSOR': ['MT', 'KOALA']
+  };
+
+  // Mapeamento: Modelo de Religador -> Lista de Relés
+  relaysByRecloserModel: { [key: string]: string[] } = {
+    'ARTECHE': ['ADATECH', 'SEL 351R', 'SEL 7511', 'SEL 751A', 'SEL 751A STD'],
+    'COOPER': ['FORM 6', 'LBS', 'SEL 651R', 'SEL 7511'],
+    'G&W': ['SEL 7511'],
+    'NOJA': ['RC 10'],
+    'SCHNEIDER': ['ADVC', 'ADVC 2', 'ADVC 3', 'PTCC'],
+    'SIEMENS': ['7SC80'],
+    'TAVRIDA': ['RC 5', 'SEL 751A (CREATE)', 'SEL 751A (ECIL)']
+  };
+
   regionalsByState: { [key: string]: string[] } = {
     'AL': ['CENTRO', 'LESTE', 'OESTE'],
     'AP': ['AP'],
+    'GO': ['ANÁPOLIS', 'FORMOSA', 'GOIÂNIA', 'IPORÁ', 'LUZILÂNDIA', 'METROPOLITANA', 'MONTE BELOS', 'MORRINHOS', 'RIO VERDE', 'URUAÇU'],
     'MA': ['CENTRO', 'LESTE', 'NOROESTE', 'NORTE', 'SUL'],
     'PA': ['CENTRO', 'LESTE', 'NORDESTE', 'NOROESTE', 'NORTE', 'OESTE', 'SUL'],
     'PI': ['CENTRO-SUL', 'METROPOLITANA', 'NORTE', 'SUL'],
@@ -77,6 +113,20 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
   get distribuidorasKeys() {
     return Object.keys(this.regionalsByState).sort();
+  }
+
+  get classesOptions() {
+    return Object.keys(this.modelsByClass).sort();
+  }
+
+  get currentModelsOptions() {
+    if (!this.selectedClasse) return [];
+    return this.modelsByClass[this.selectedClasse] || [];
+  }
+
+  get currentRelaysOptions() {
+    if (this.selectedClasse !== 'RELIGADOR' || !this.selectedModelo) return [];
+    return this.relaysByRecloserModel[this.selectedModelo] || [];
   }
 
   @ViewChild('messagesArea') private messagesAreaElement!: ElementRef;
@@ -121,16 +171,26 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   formatAlphaNumeric(event: any) {
     let v = event.target.value;
     v = v.toUpperCase();
-    v = v.replace(/[^A-Z0-9-]/g, "");
+    v = v.replace(/[^A-Z0-9- ]/g, ""); // Adicionei espaço no regex caso a subestação tenha nome composto
     event.target.value = v;
   }
 
   onOpcaoChange() {
     if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
-      this.selectedModo = 'BGAN';
+      // Força satelital, mas o usuário deve selecionar BGAN ou o sistema assume no submit
+      this.selectedModo = 'SATELITAL'; 
     } else {
       this.selectedModo = ''; 
     }
+  }
+
+  onClasseChange() {
+    this.selectedModelo = '';
+    this.selectedRele = '';
+  }
+
+  onModeloChange() {
+    this.selectedRele = '';
   }
 
   async checkActiveConversation() {
@@ -174,9 +234,19 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     const ipFinal = formData.ipHidden || formData.ip;
     const portaFinal = formData.portaHidden || formData.porta;
 
+    // Constrói a string de modo de comunicação para ficar claro no backend
     let modoFinal = formData.modoComunicacao;
+
+    if (formData.modoComunicacao === 'GPRS' && formData.tipoGprs) {
+      modoFinal = `GPRS - ${formData.tipoGprs}`;
+    } else if (formData.modoComunicacao === 'SATELITAL' && formData.tipoSatelital) {
+      modoFinal = `SATELITAL - ${formData.tipoSatelital}`;
+    } else if (formData.modoComunicacao === 'FIBRA' && formData.tipoFibra) {
+      modoFinal = `FIBRA - ${formData.tipoFibra}`;
+    }
+
     if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
-      modoFinal = 'BGAN';
+      modoFinal = 'SATELITAL - BGAN (HUGHES)';
     }
 
     const intakeData: IntakeData = {
@@ -185,11 +255,23 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
       distribuidora: formData.distribuidora,
       regional: formData.regional,
       opcaoAtendimento: formData.opcaoAtendimento,
-      siglaSEAL: formData.siglaSEAL,
+      
+      // Novos inputs separados
+      subestacao: formData.subestacao,
+      alimentador: formData.alimentador,
+
       componente: formData.componente,
-      modeloControle: formData.modeloControle,
+      classeComponente: formData.classeComponente,
+      modelo: formData.modelo,
+      rele: formData.rele || null,
+
       modoComunicacao: modoFinal,
+      
+      // Detalhes salvos separadamente
       tipoGprs: formData.tipoGprs || null,
+      tipoSatelital: formData.tipoSatelital || null,
+      tipoFibra: formData.tipoFibra || null,
+
       ip: ipFinal,
       porta: portaFinal
     };
@@ -287,7 +369,8 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   uploadToStorage(file: File | Blob) {
     if (!this.conversationId) return;
     this.isUploading.set(true);
-    const path = `chat_media/${this.conversationId}/${Date.now()}_${(file as File).name || 'audio.webm'}`;
+    const fileName = (file as File).name || `audio_${Date.now()}.webm`;
+    const path = `chat_media/${this.conversationId}/${Date.now()}_${fileName}`;
     const storageRef = ref(this.storage, path);
     const task = uploadBytesResumable(storageRef, file);
 
@@ -359,39 +442,29 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
-  // --- NOVO MÉTODO: FORÇA O DOWNLOAD VIA BLOB ---
   async downloadMedia(url: string, type: 'image' | 'video' | 'audio' | undefined) {
     if (!url) return;
     try {
-      // Busca o conteúdo do arquivo
       const response = await fetch(url);
       const blob = await response.blob();
-      
-      // Cria uma URL temporária para o Blob
       const blobUrl = window.URL.createObjectURL(blob);
       
-      // Define a extensão baseada no tipo (simplificado)
       let extension = '';
-      if (type === 'image') extension = 'jpg'; // O browser pode corrigir
+      if (type === 'image') extension = 'jpg';
       else if (type === 'video') extension = 'mp4';
       else if (type === 'audio') extension = 'webm';
       
       const fileName = `arquivo_${new Date().getTime()}.${extension}`;
-
-      // Cria um link invisível e clica nele
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
-      
-      // Limpeza
       document.body.removeChild(a);
       window.URL.revokeObjectURL(blobUrl);
 
     } catch (error) {
       console.error('Erro ao baixar mídia:', error);
-      // Fallback: Se der erro (ex: CORS), abre em nova aba
       window.open(url, '_blank');
     }
   }
