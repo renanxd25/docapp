@@ -4,7 +4,7 @@
     <div class="header-info">
       <div class="avatar-icon-wrapper"><i class="fa-solid fa-robot"></i></div>
       <div class="text-info">
-        <h3>NOC Atendimento</h3>
+        <h3>NOC Atendimentos</h3>
         <span class="status-dot online"></span><span class="status-text">Online</span>
       </div>
     </div>
@@ -88,7 +88,8 @@
                 name="subestacao" 
                 ngModel 
                 required 
-                (input)="formatAlphaNumeric($event)"
+                maxlength="8"
+                (input)="formatMax8AlphaNumeric($event)"
                 placeholder="Ex: SE-123">
             </div>
 
@@ -99,7 +100,8 @@
                 name="alimentador" 
                 ngModel 
                 required 
-                (input)="formatAlphaNumeric($event)"
+                maxlength="8"
+                (input)="formatMax8AlphaNumeric($event)"
                 placeholder="Ex: AL-01">
             </div>
             
@@ -145,8 +147,8 @@
             }
 
             @if (selectedClasse === 'RELIGADOR' && selectedModelo) {
-                <div class="form-group">
-                  <label>11. RELÉ:</label>
+                <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
+                  <label style="color: #007bff;">↳ SELECIONE O RELÉ:</label>
                   <select name="rele" [(ngModel)]="selectedRele" required>
                     <option value="" disabled selected>Selecione o relé...</option>
                     @for (rele of currentRelaysOptions; track rele) {
@@ -157,7 +159,7 @@
             }
             
             <div class="form-group">
-              <label>12. MEIO DE COMUNICAÇÃO:</label>
+              <label>11. MEIO DE COMUNICAÇÃO:</label>
               <select 
                 name="modoComunicacao" 
                 [(ngModel)]="selectedModo" 
@@ -169,7 +171,6 @@
                 <option value="SATELITAL">SATELITAL</option>
                 <option value="FIBRA">FIBRA</option>
                 <option value="RÁDIO">RÁDIO</option>
-                <!--<option value="V2COM">V2COM</option>-->
               </select>
             </div>
 
@@ -208,7 +209,7 @@
             }
 
             <div class="form-group">
-              <label>13. IP:</label>
+              <label>12. IP:</label>
               
               @if (modo.value === 'GPRS') {
                 @if (intakeForm.value.tipoGprs === 'CAS') {
@@ -230,10 +231,10 @@
 
               @else if (modo.value === 'SATELITAL') {
                 @if (intakeForm.value.tipoSatelital === 'BGAN') {
-                  <input type="text" name="ip" ngModel required placeholder="Digite o IP GLOBAL" oninput="this.value = this.value.toUpperCase()">
+                  <input type="text" name="ip" ngModel required placeholder="Digite o IP GLOBAL" (input)="formatIP($event)">
                 } 
                 @else if (intakeForm.value.tipoSatelital === 'TELESPAZIO') {
-                  <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
+                  <input type="text" name="ip" ngModel required placeholder="Digite o IP" (input)="formatIP($event)">
                 }
                 @else {
                   <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de Satelital..." disabled>
@@ -242,38 +243,43 @@
 
               @else if (modo.value === 'FIBRA') {
                 @if (intakeForm.value.tipoFibra) {
-                   <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
+                   <input type="text" name="ip" ngModel required placeholder="Digite o IP" (input)="formatIP($event)">
                 } @else {
                   <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de Fibra..." disabled>
                 }
               }
 
               @else {
-                <input type="text" name="ip" ngModel required placeholder="Digite o IP" oninput="this.value = this.value.toUpperCase()">
+                <input type="text" name="ip" ngModel required placeholder="Digite o IP" (input)="formatIP($event)">
               }
             </div>
 
             <div class="form-group">
-              <label>14. PORTA:</label>
+              <label>13. PORTA:</label>
               
               @if (modo.value === 'SATELITAL' && intakeForm.value.tipoSatelital === 'TELESPAZIO') {
                 <input type="text" name="portaDisplay" value="20000" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="20000">
               }
               
-              @else if (modo.value === 'FIBRA' && intakeForm.value.tipoFibra === 'SERIAL') {
-                <input type="text" name="portaDisplay" value="2000" disabled style="background-color: #e9ecef;">
-                <input type="hidden" name="portaHidden" ngModel="2000">
+              @else if (modo.value === 'FIBRA' && intakeForm.value.tipoFibra === 'ETHERNET') {
+                <input type="text" name="portaDisplay" value="20000" disabled style="background-color: #e9ecef;">
+                <input type="hidden" name="portaHidden" ngModel="20000">
               }
 
-              @else if (modo.value === 'RÁDIO' && distribuidora.value === 'PA') {
-                 <input type="text" name="portaDisplay" value="CONSULTAR SCADA" disabled style="background-color: #e9ecef; color: #dc3545; font-weight: bold;">
+              @else if (intakeForm.value.tipoFibra === 'SERIAL' && distribuidora.value === 'MA') {
+                 <input type="text" name="portaDisplay" value="50002" disabled style="background-color: #e9ecef;">
+                 <input type="hidden" name="portaHidden" ngModel="50002">
+              }
+
+               @else if (modo.value === 'RÁDIO' && distribuidora.value === 'PA') {
+                 <input type="text" name="portaDisplay" value="CONSULTAR SCADA" disabled style="background-color: #e9ecef;">
                  <input type="hidden" name="portaHidden" ngModel="CONSULTAR SCADA">
               }
 
               @else if (modo.value === 'RÁDIO') {
-                <input type="text" name="portaDisplay" value="2000" disabled style="background-color: #e9ecef;">
-                <input type="hidden" name="portaHidden" ngModel="2000">
+                <input type="text" name="portaDisplay" value="20000" disabled style="background-color: #e9ecef;">
+                <input type="hidden" name="portaHidden" ngModel="20000">
               }
               
               @else if (selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
@@ -282,7 +288,15 @@
               }
 
               @else {
-                <input type="number" name="porta" ngModel required placeholder="Digite a porta">
+                <input 
+                  type="text" 
+                  inputmode="numeric" 
+                  name="porta" 
+                  ngModel 
+                  required 
+                  placeholder="Digite a porta"
+                  maxlength="5"
+                  (input)="formatOnlyNumbers($event)">
               }
             </div>
 

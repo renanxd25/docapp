@@ -26,7 +26,6 @@ interface IntakeData {
   regional: string;
   opcaoAtendimento: string;
   
-  // NOVOS CAMPOS SEPARADOS
   subestacao: string;
   alimentador: string;
   
@@ -37,10 +36,9 @@ interface IntakeData {
 
   modoComunicacao: string;
   
-  // CAMPOS ESPECÍFICOS DE SUB-SELEÇÃO
   tipoGprs?: string;
-  tipoSatelital?: string; // Novo
-  tipoFibra?: string;     // Novo
+  tipoSatelital?: string; 
+  tipoFibra?: string; 
   
   ip?: string;
   porta?: string;
@@ -69,11 +67,9 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   uploadPercentage = signal(0);
   isRecording = signal(false);
 
-  // Variáveis de controle do formulário
   selectedOpcao: string = '';
   selectedModo: string = '';
 
-  // Novas variáveis para os selects dependentes
   selectedClasse: string = '';
   selectedModelo: string = '';
   selectedRele: string = '';
@@ -83,14 +79,12 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: any[] = [];
 
-  // Mapeamento: Classe -> Lista de Modelos
   modelsByClass: { [key: string]: string[] } = {
     'CHAVE TELECOMANDA': ['BONOMI', 'IMS'],
     'RELIGADOR': ['ARTECHE', 'COOPER', 'G&W', 'NOJA', 'SCHNEIDER', 'SIEMENS', 'TAVRIDA'],
     'SENSOR': ['MT', 'KOALA']
   };
 
-  // Mapeamento: Modelo de Religador -> Lista de Relés
   relaysByRecloserModel: { [key: string]: string[] } = {
     'ARTECHE': ['ADATECH', 'SEL 351R', 'SEL 7511', 'SEL 751A', 'SEL 751A STD'],
     'COOPER': ['FORM 6', 'LBS', 'SEL 651R', 'SEL 7511'],
@@ -168,16 +162,50 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     event.target.value = v.substring(0, 15);
   }
 
+  // Formatação padrão (Componente)
   formatAlphaNumeric(event: any) {
     let v = event.target.value;
     v = v.toUpperCase();
-    v = v.replace(/[^A-Z0-9- ]/g, ""); // Adicionei espaço no regex caso a subestação tenha nome composto
+    v = v.replace(/[^A-Z0-9- ]/g, ""); 
+    event.target.value = v;
+  }
+
+  // NOVO: Formatação limitada a 8 caracteres (Subestação/Alimentador)
+  formatMax8AlphaNumeric(event: any) {
+    let v = event.target.value;
+    v = v.toUpperCase();
+    v = v.replace(/[^A-Z0-9- ]/g, "");
+    
+    // Garante o limite caso o maxlength falhe ou para paste
+    if (v.length > 8) {
+      v = v.substring(0, 8);
+    }
+    
+    event.target.value = v;
+  }
+
+  // NOVO: Formatação de IP (Apenas números e pontos, sem sequência de pontos)
+  formatIP(event: any) {
+    let v = event.target.value;
+    
+    // Remove tudo que NÃO for número ou ponto
+    v = v.replace(/[^0-9.]/g, "");
+    
+    // Evita pontos repetidos (..)
+    v = v.replace(/\.{2,}/g, ".");
+    
+    event.target.value = v;
+  }
+
+  // NOVO: Formatação de Porta (Apenas números)
+  formatOnlyNumbers(event: any) {
+    let v = event.target.value;
+    v = v.replace(/\D/g, "");
     event.target.value = v;
   }
 
   onOpcaoChange() {
     if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
-      // Força satelital, mas o usuário deve selecionar BGAN ou o sistema assume no submit
       this.selectedModo = 'SATELITAL'; 
     } else {
       this.selectedModo = ''; 
@@ -234,7 +262,6 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     const ipFinal = formData.ipHidden || formData.ip;
     const portaFinal = formData.portaHidden || formData.porta;
 
-    // Constrói a string de modo de comunicação para ficar claro no backend
     let modoFinal = formData.modoComunicacao;
 
     if (formData.modoComunicacao === 'GPRS' && formData.tipoGprs) {
@@ -256,7 +283,6 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
       regional: formData.regional,
       opcaoAtendimento: formData.opcaoAtendimento,
       
-      // Novos inputs separados
       subestacao: formData.subestacao,
       alimentador: formData.alimentador,
 
@@ -267,7 +293,6 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
       modoComunicacao: modoFinal,
       
-      // Detalhes salvos separadamente
       tipoGprs: formData.tipoGprs || null,
       tipoSatelital: formData.tipoSatelital || null,
       tipoFibra: formData.tipoFibra || null,
