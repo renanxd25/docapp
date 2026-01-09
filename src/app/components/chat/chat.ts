@@ -162,7 +162,6 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     event.target.value = v.substring(0, 15);
   }
 
-  // Formatação padrão (Componente)
   formatAlphaNumeric(event: any) {
     let v = event.target.value;
     v = v.toUpperCase();
@@ -170,13 +169,11 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     event.target.value = v;
   }
 
-  // NOVO: Formatação limitada a 8 caracteres (Subestação/Alimentador)
   formatMax8AlphaNumeric(event: any) {
     let v = event.target.value;
     v = v.toUpperCase();
     v = v.replace(/[^A-Z0-9- ]/g, "");
     
-    // Garante o limite caso o maxlength falhe ou para paste
     if (v.length > 8) {
       v = v.substring(0, 8);
     }
@@ -184,20 +181,13 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     event.target.value = v;
   }
 
-  // NOVO: Formatação de IP (Apenas números e pontos, sem sequência de pontos)
   formatIP(event: any) {
     let v = event.target.value;
-    
-    // Remove tudo que NÃO for número ou ponto
     v = v.replace(/[^0-9.]/g, "");
-    
-    // Evita pontos repetidos (..)
     v = v.replace(/\.{2,}/g, ".");
-    
     event.target.value = v;
   }
 
-  // NOVO: Formatação de Porta (Apenas números)
   formatOnlyNumbers(event: any) {
     let v = event.target.value;
     v = v.replace(/\D/g, "");
@@ -253,6 +243,31 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
         this.conversationStatus.set('pending_intake');
       }
     });
+  }
+
+  // MÉTODO NOVO PARA CANCELAR ATENDIMENTO NA FILA
+  async cancelTicket() {
+    if (!this.conversationId) return;
+
+    // Confirmação para evitar cliques acidentais
+    const confirmacao = confirm("Tem certeza que deseja cancelar sua solicitação de atendimento?");
+    if (!confirmacao) return;
+
+    try {
+      const docRef = doc(this.firestore, 'conversations', this.conversationId);
+      
+      // Atualiza o status para closed e adiciona motivo
+      await updateDoc(docRef, {
+        status: 'closed',
+        closedReason: 'canceled_by_user',
+        closedAt: serverTimestamp()
+      });
+      // O listener do checkActiveConversation vai detectar a mudança para 'closed' e atualizar a UI
+
+    } catch (error) {
+      console.error("Erro ao cancelar:", error);
+      alert("Não foi possível cancelar a solicitação no momento.");
+    }
   }
 
   async submitIntakeForm(form: NgForm) {

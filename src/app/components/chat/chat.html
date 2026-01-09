@@ -130,21 +130,21 @@
               </select>
             </div>
             
-            @if (selectedClasse) {
-                <div class="form-group">
-                  <label>10. MODELO:</label>
-                  <select 
-                    name="modelo" 
-                    [(ngModel)]="selectedModelo" 
-                    (change)="onModeloChange()" 
-                    required>
-                    <option value="" disabled selected>Selecione o modelo...</option>
-                    @for (modelo of currentModelsOptions; track modelo) {
-                      <option [value]="modelo">{{ modelo }}</option>
-                    }
-                  </select>
-                </div>
-            }
+            
+            <div class="form-group">
+              <label>10. MODELO:</label>
+              <select 
+                name="modelo" 
+                [(ngModel)]="selectedModelo" 
+                (change)="onModeloChange()" 
+                required>
+                <option value="" disabled selected>Selecione o modelo...</option>
+                @for (modelo of currentModelsOptions; track modelo) {
+                  <option [value]="modelo">{{ modelo }}</option>
+                }
+              </select>
+            </div>
+            
 
             @if (selectedClasse === 'RELIGADOR' && selectedModelo) {
                 <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
@@ -312,6 +312,11 @@
         @if(queuePosition() > 0) {
           <p class="queue-position">Sua posição na fila: <strong>{{ queuePosition() }}</strong></p>
         }
+        
+        <button class="cancel-queue-btn" (click)="cancelTicket()">
+            <i class="fa-solid fa-xmark"></i> Cancelar Atendimento
+        </button>
+        
       </div>
     }
 
