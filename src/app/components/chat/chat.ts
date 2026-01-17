@@ -69,6 +69,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
   selectedOpcao: string = '';
   selectedModo: string = '';
+  selectedTipoSatelital: string = ''; 
 
   selectedClasse: string = '';
   selectedModelo: string = '';
@@ -166,6 +167,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     let v = event.target.value;
     v = v.toUpperCase();
     v = v.replace(/[^A-Z0-9- ]/g, ""); 
+    v = v.replace(/-{2,}/g, "-"); 
     event.target.value = v;
   }
 
@@ -173,6 +175,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     let v = event.target.value;
     v = v.toUpperCase();
     v = v.replace(/[^A-Z0-9- ]/g, "");
+    v = v.replace(/-{2,}/g, "-"); 
     
     if (v.length > 8) {
       v = v.substring(0, 8);
@@ -194,11 +197,29 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     event.target.value = v;
   }
 
+  // --- IMPLEMENTAÇÃO DA NOVA FUNÇÃO DE PLACEHOLDER ---
+  getFibraIpPlaceholder(tipoFibra: string): string {
+    if (!tipoFibra) return 'Digite o IP';
+
+    if (tipoFibra === 'SERIAL') {
+      return 'Digite o IP do Switch';
+    }
+
+    if (tipoFibra === 'ETHERNET' && this.selectedClasse === 'RELIGADOR') {
+      return 'Digite o IP do Relé';
+    }
+
+    return 'Digite o IP';
+  }
+  // ----------------------------------------------------
+
   onOpcaoChange() {
     if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
       this.selectedModo = 'SATELITAL'; 
+      this.selectedTipoSatelital = 'BGAN'; 
     } else {
       this.selectedModo = ''; 
+      this.selectedTipoSatelital = '';
     }
   }
 
@@ -245,25 +266,18 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     });
   }
 
-  // MÉTODO NOVO PARA CANCELAR ATENDIMENTO NA FILA
   async cancelTicket() {
     if (!this.conversationId) return;
-
-    // Confirmação para evitar cliques acidentais
     const confirmacao = confirm("Tem certeza que deseja cancelar sua solicitação de atendimento?");
     if (!confirmacao) return;
 
     try {
       const docRef = doc(this.firestore, 'conversations', this.conversationId);
-      
-      // Atualiza o status para closed e adiciona motivo
       await updateDoc(docRef, {
         status: 'closed',
         closedReason: 'canceled_by_user',
         closedAt: serverTimestamp()
       });
-      // O listener do checkActiveConversation vai detectar a mudança para 'closed' e atualizar a UI
-
     } catch (error) {
       console.error("Erro ao cancelar:", error);
       alert("Não foi possível cancelar a solicitação no momento.");
@@ -281,8 +295,11 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
     if (formData.modoComunicacao === 'GPRS' && formData.tipoGprs) {
       modoFinal = `GPRS - ${formData.tipoGprs}`;
-    } else if (formData.modoComunicacao === 'SATELITAL' && formData.tipoSatelital) {
-      modoFinal = `SATELITAL - ${formData.tipoSatelital}`;
+    } else if (formData.modoComunicacao === 'SATELITAL') {
+       const tipoSat = formData.tipoSatelitalHidden || formData.tipoSatelital;
+       if (tipoSat) {
+          modoFinal = `SATELITAL - ${tipoSat}`;
+       }
     } else if (formData.modoComunicacao === 'FIBRA' && formData.tipoFibra) {
       modoFinal = `FIBRA - ${formData.tipoFibra}`;
     }
@@ -309,7 +326,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
       modoComunicacao: modoFinal,
       
       tipoGprs: formData.tipoGprs || null,
-      tipoSatelital: formData.tipoSatelital || null,
+      tipoSatelital: formData.tipoSatelital || this.selectedTipoSatelital || null,
       tipoFibra: formData.tipoFibra || null,
 
       ip: ipFinal,

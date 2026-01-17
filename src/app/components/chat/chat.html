@@ -189,11 +189,18 @@
             @if (modo.value === 'SATELITAL') {
               <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
                 <label style="color: #007bff;">↳ SELECIONE O TIPO DE SATELITAL:</label>
-                <select name="tipoSatelital" ngModel required>
+                <select 
+                  name="tipoSatelital" 
+                  [(ngModel)]="selectedTipoSatelital" 
+                  required 
+                  [disabled]="selectedOpcao === 'CADASTRO DE PORTA HUGHES'">
                   <option value="" disabled selected>Selecione o tipo...</option>
                   <option value="BGAN">BGAN</option>
                   <option value="TELESPAZIO">TELESPAZIO</option>
                 </select>
+                @if(selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
+                    <input type="hidden" name="tipoSatelitalHidden" [(ngModel)]="selectedTipoSatelital">
+                }
               </div>
             }
 
@@ -202,8 +209,8 @@
                 <label style="color: #007bff;">↳ SELECIONE O TIPO DE FIBRA:</label>
                 <select name="tipoFibra" ngModel required>
                   <option value="" disabled selected>Selecione o tipo...</option>
-                  <option value="SERIAL">SERIAL</option>
                   <option value="ETHERNET">ETHERNET</option>
+                  <option value="SERIAL">SERIAL</option>
                 </select>
               </div>
             }
@@ -230,10 +237,10 @@
               }
 
               @else if (modo.value === 'SATELITAL') {
-                @if (intakeForm.value.tipoSatelital === 'BGAN') {
+                @if (selectedTipoSatelital === 'BGAN') {
                   <input type="text" name="ip" ngModel required placeholder="Digite o IP GLOBAL" (input)="formatIP($event)">
                 } 
-                @else if (intakeForm.value.tipoSatelital === 'TELESPAZIO') {
+                @else if (selectedTipoSatelital === 'TELESPAZIO') {
                   <input type="text" name="ip" ngModel required placeholder="Digite o IP" (input)="formatIP($event)">
                 }
                 @else {
@@ -243,7 +250,13 @@
 
               @else if (modo.value === 'FIBRA') {
                 @if (intakeForm.value.tipoFibra) {
-                   <input type="text" name="ip" ngModel required placeholder="Digite o IP" (input)="formatIP($event)">
+                   <input 
+                    type="text" 
+                    name="ip" 
+                    ngModel 
+                    required 
+                    [placeholder]="getFibraIpPlaceholder(intakeForm.value.tipoFibra)" 
+                    (input)="formatIP($event)">
                 } @else {
                   <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de Fibra..." disabled>
                 }
@@ -257,7 +270,7 @@
             <div class="form-group">
               <label>13. PORTA:</label>
               
-              @if (modo.value === 'SATELITAL' && intakeForm.value.tipoSatelital === 'TELESPAZIO') {
+              @if (modo.value === 'SATELITAL' && selectedTipoSatelital === 'TELESPAZIO') {
                 <input type="text" name="portaDisplay" value="20000" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="20000">
               }
