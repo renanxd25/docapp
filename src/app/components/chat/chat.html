@@ -132,7 +132,6 @@
               </select>
             </div>
             
-            
             <div class="form-group">
               <label>10. MODELO:</label>
               <select 
@@ -147,7 +146,6 @@
               </select>
             </div>
             
-
             @if (selectedClasse === 'RELIGADOR' && selectedModelo) {
                 <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
                   <label style="color: #007bff;">↳ SELECIONE O RELÉ:</label>
@@ -221,18 +219,36 @@
               <label>12. IP:</label>
               
               @if (modo.value === 'GPRS') {
+                
                 @if (intakeForm.value.tipoGprs === 'CAS') {
                   <input type="text" name="ip" value="10.1.1.58" disabled style="background-color: #e9ecef;">
                   <input type="hidden" name="ipHidden" ngModel="10.1.1.58"> 
                 } 
+                
                 @else if (intakeForm.value.tipoGprs === 'V2COM') {
-                  <input type="text" name="ip" value="10.74.150.20" disabled style="background-color: #e9ecef;">
-                   <input type="hidden" name="ipHidden" ngModel="10.74.150.20">
+                  
+                    @if (distribuidora.value === 'RS') {
+                        <input type="text" name="ip" value="10.63.78.53" disabled style="background-color: #e9ecef;">
+                        <input type="hidden" name="ipHidden" ngModel="10.63.78.53">
+                    }
+                    @else if (distribuidora.value === 'GO') {
+                        <input type="text" name="ip" value="10.125.18.96" disabled style="background-color: #e9ecef;">
+                        <input type="hidden" name="ipHidden" ngModel="10.125.18.96">
+                    }
+                    @else if (distribuidora.value === 'MA' || distribuidora.value === 'PI') {
+                        <input type="text" name="ip" value="10.74.150.20" disabled style="background-color: #e9ecef;">
+                        <input type="hidden" name="ipHidden" ngModel="10.74.150.20">
+                    }
+                    @else {
+                        <input type="text" name="ip" ngModel required placeholder="Digite o IP V2COM" (input)="formatIP($event)">
+                    }
                 } 
+                
                 @else if (intakeForm.value.tipoGprs === 'HORUS') {
                   <input type="text" name="ip" value="10.82.149.2" disabled style="background-color: #e9ecef;">
                    <input type="hidden" name="ipHidden" ngModel="10.82.149.2">
                 } 
+                
                 @else {
                   <input type="text" name="ipPlaceholder" placeholder="Selecione o tipo de GPRS acima..." disabled>
                 }

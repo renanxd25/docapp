@@ -339,7 +339,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     } else if (formData.modoComunicacao === 'SATELITAL') {
        const tipoSat = formData.tipoSatelitalHidden || formData.tipoSatelital;
        if (tipoSat) {
-          modoFinal = `SATELITAL - ${tipoSat}`;
+         modoFinal = `SATELITAL - ${tipoSat}`;
        }
     } else if (formData.modoComunicacao === 'FIBRA' && formData.tipoFibra) {
       modoFinal = `FIBRA - ${formData.tipoFibra}`;
