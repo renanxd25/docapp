@@ -1,7 +1,5 @@
-/* Importa uma fonte similar à da imagem (opcional, mas recomendado) */
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
 
-/* Remove margens e define a fonte base */
 :host {
   font-family: 'Manrope', sans-serif;
 }
@@ -13,24 +11,18 @@
   justify-content: center;
   padding: 2rem;
   width: 100vw;
+  margin-left: -8px;
+  margin-top: -8px;
   min-height: 100vh;
   box-sizing: border-box; 
-
-  /* ================== MUDANÇA 1: FUNDO ================== */
-  /* Cor base sólida alterada */
   background-color: #0e2746;
-
-  /* O padrão de grade sutil, igual ao da imagem */
   background-size: 40px 40px;
   background-image: 
     repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
     repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
-    /* Gradiente removido, agora usa a cor sólida */
     linear-gradient(to bottom, #0e2746, #0e2746); 
-  /* ================== FIM DA MUDANÇA 1 ================== */
 }
 
-/* Títulos na parte de cima */
 .page-title {
   font-size: 2.25rem;
   font-weight: 800;
@@ -44,11 +36,17 @@
   font-weight: 600;
   color: #FFF;
   text-align: center;
+  margin: 0;
+}
+
+.page-subtitle2 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #FFF;
+  text-align: center;
   margin: 0 0 2rem 0;
 }
 
-
-/* O cartão branco do formulário */
 .login-card {
   background: white;
   border-radius: 20px;
@@ -59,7 +57,6 @@
   box-sizing: border-box;
 }
 
-/* Estilização dos grupos de input */
 .input-group {
   margin-bottom: 1.25rem;
   
@@ -71,32 +68,101 @@
     color: #333;
   }
   
+  /* Container relativo original para o botão de senha (mantido) */
+  .input-container {
+    position: relative;
+    width: 100%;
+  }
+
+  /* --- NOVA IMPLEMENTAÇÃO: ÍCONES À ESQUERDA --- */
+
+  /* 1. Wrapper para inputs que terão ícone à esquerda */
+  .input-with-icon {
+    position: relative;
+    width: 100%;
+
+    /* 2. Estilo do novo ícone cinza à esquerda */
+    .field-icon {
+      position: absolute;
+      left: 14px; /* Distância da borda esquerda */
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af; /* Cor cinza solicitada */
+      pointer-events: none; /* Garante que o clique passe para o input */
+      z-index: 1; // Fica acima do fundo do input
+    }
+    
+    /* 3. Ajuste de padding APENAS para inputs dentro deste wrapper */
+    input {
+      // Aumenta o padding esquerdo para dar espaço ao ícone (2.8rem)
+      // Mantém o padding direito original para o caso do input de nome (1rem)
+      padding: 0.8rem 1rem 0.8rem 2.8rem;
+    }
+  }
+
+  /* --- FIM DA NOVA IMPLEMENTAÇÃO --- */
+
+
+  /* Estilo base do input */
   input {
     width: 100%;
-    padding: 0.8rem 1rem;
+    // Padding padrão para inputs sem ícone (como o "Nome")
+    padding: 0.8rem 1rem; 
     box-sizing: border-box;
     border: 1px solid #ddd;
-    border-radius: 10px; /* Cantos arredondados */
+    border-radius: 10px;
     font-size: 1rem;
+    transition: all 0.2s;
+
+    /* Estilo para o placeholder */
+    &::placeholder {
+      color: #9ca3af;
+      opacity: 0.8;
+    }
     
     &:focus {
       outline: none;
-      /* ================== MUDANÇA 2: FOCO ================== */
-      border-color: #0e2746; /* Cor de foco atualizada */
-      /* RGB para #0e2746 é (14, 39, 70) */
+      border-color: #0e2746;
       box-shadow: 0 0 0 3px rgba(14, 39, 70, 0.2); 
-      /* ================== FIM DA MUDANÇA 2 ================== */
+    }
+  }
+  
+  /* Regra específica para o input de senha que tem botão à direita */
+  .password-wrapper input {
+      padding-right: 2.5rem; /* Espaço extra na direita para o ícone de olho */
+  }
+
+  /* Estilo do botão de olho (mantido do original) */
+  .toggle-password-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af; // Ajustado para combinar com o cinza dos novos ícones
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+
+    &:hover {
+      color: #0e2746;
+    }
+    
+    &:focus {
+      outline: none;
     }
   }
 }
 
-/* Botão de "Entrar" / "Cadastrar" */
 .submit-btn {
   width: 100%;
   padding: 1rem;
   border: none;
-  /* ================== MUDANÇA 3: BOTÃO ================== */
-  background-color: #0e2746; /* Cor principal do botão */
+  background-color: #0e2746;
   color: white;
   font-size: 1rem;
   font-weight: 700;
@@ -106,9 +172,8 @@
   margin-top: 1rem; 
 
   &:hover {
-    background-color: #0b203b; /* Versão mais escura para o hover */
+    background-color: #0b203b;
   }
-  /* ================== FIM DA MUDANÇA 3 ================== */
 
   &:disabled {
     background: #ccc;
@@ -116,15 +181,14 @@
   }
 }
 
-/* Mensagem de Erro */
 .error {
   color: #d93025;
   text-align: center;
   margin: 1rem 0 0 0;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
-/* Link para alternar entre Login e Cadastro */
 .toggle-link {
   display: block;
   text-align: center;
@@ -132,15 +196,14 @@
   color: #555;
   text-decoration: none;
   font-size: 0.9rem;
+  cursor: pointer; // Adicionado cursor pointer
   
   &:hover {
-    /* ================== MUDANÇA 4: LINK ================== */
-    color: #0e2746; /* Cor do hover do link atualizada */
-    /* ================== FIM DA MUDANÇA 4 ================== */
+    color: #0e2746;
     text-decoration: underline;
-    cursor: pointer;
   }
 }
-.logo{
+
+.logo {
   width: 250px;
 }

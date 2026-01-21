@@ -20,44 +20,73 @@ export class Login {
   auth: Auth = inject(Auth);
   router: Router = inject(Router);
   
-  // Signal para controlar se estamos em modo Login ou Cadastro
+  // Signals
   isLoginMode = signal(true);
-  error: string | null = null;
+  showPassword = signal(false);
+  
+  // CORREÇÃO: Transformamos 'error' em signal para atualização imediata na tela
+  error = signal<string | null>(null);
+
   loading = false;
 
   toggleMode() {
     this.isLoginMode.set(!this.isLoginMode());
-    this.error = null;
+    this.error.set(null); // Resetar o signal de erro
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword.update(value => !value);
   }
 
   async onSubmit(form: NgForm) {
     if (form.invalid) return;
     
     this.loading = true;
-    this.error = null;
+    this.error.set(null); // Limpa o erro antigo
+    
     const { email, password, displayName } = form.value;
 
     try {
       if (this.isLoginMode()) {
-        // --- Modo Login ---
         await signInWithEmailAndPassword(this.auth, email, password);
       } else {
-        // --- Modo Cadastro ---
         if (!displayName) {
-          this.error = "O nome é obrigatório para o cadastro.";
+          this.error.set("O nome é obrigatório para o cadastro.");
           this.loading = false;
           return;
         }
         const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-        // Atualiza o perfil do usuário recém-criado com o nome
         await updateProfile(userCredential.user, { displayName: displayName });
       }
-      // Se chegou aqui, o login/cadastro funcionou
+      
       this.router.navigate(['/chat']);
 
     } catch (err: any) {
-      this.error = "Erro: " + err.message;
-      console.error(err);
+      console.error("Erro Firebase:", err.code);
+
+      // CORREÇÃO: Usamos .set() para notificar a UI imediatamente
+      switch(err.code) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          this.error.set("E-mail ou senha incorretos.");
+          break;
+        case 'auth/email-already-in-use':
+          this.error.set("Este e-mail já está em uso por outra conta.");
+          break;
+        case 'auth/invalid-email':
+          this.error.set("O formato do e-mail é inválido.");
+          break;
+        case 'auth/weak-password':
+          this.error.set("A senha é muito fraca. Use pelo menos 6 caracteres.");
+          break;
+        case 'auth/too-many-requests':
+          this.error.set("Muitas tentativas falhas. Tente novamente mais tarde.");
+          break;
+        default:
+          this.error.set("Ocorreu um erro inesperado. Tente novamente.");
+      }
+      
     } finally {
       this.loading = false;
     }

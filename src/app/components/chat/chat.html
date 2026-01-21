@@ -5,7 +5,8 @@
       <div class="avatar-icon-wrapper"><i class="fa-solid fa-robot"></i></div>
       <div class="text-info">
         <h3>NOC Atendimentos</h3>
-        <span class="status-dot online"></span><span class="status-text">Online</span>
+        
+        <span class="status-dot online"></span><span class="status-text">Cliente</span>
       </div>
     </div>
     <button (click)="logout()" class="logout-btn">Sair</button>
@@ -112,8 +113,9 @@
                 name="componente" 
                 ngModel 
                 required 
+                maxlength="10"
                 (input)="formatAlphaNumeric($event)"
-                placeholder="Apenas letras, números e hífen">
+                placeholder="Apenas letras, números e hífen (Máx 10)">
             </div>
             
             <div class="form-group">
@@ -275,6 +277,10 @@
                 <input type="hidden" name="portaHidden" ngModel="20000">
               }
               
+              @else if (modo.value === 'SATELITAL' && selectedTipoSatelital === 'BGAN' && selectedOpcao !== 'CADASTRO DE PORTA HUGHES') {
+                <input type="text" name="portaDisplay" value="CONSULTAR VELP E SCADA" disabled style="background-color: #e9ecef; font-size: 0.85rem;">
+                <input type="hidden" name="portaHidden" ngModel="CONSULTAR VELP E SCADA">
+              }
               @else if (modo.value === 'FIBRA' && intakeForm.value.tipoFibra === 'ETHERNET') {
                 <input type="text" name="portaDisplay" value="20000" disabled style="background-color: #e9ecef;">
                 <input type="hidden" name="portaHidden" ngModel="20000">

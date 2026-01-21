@@ -4,7 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { 
   Firestore, collection, addDoc, serverTimestamp, 
   query, where, orderBy, onSnapshot, doc, updateDoc, 
-  limit, Timestamp, Unsubscribe 
+  limit, Timestamp, Unsubscribe, DocumentChange 
 } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Auth, signInAnonymously, signOut, User, onAuthStateChanged } from '@angular/fire/auth';
@@ -128,6 +128,9 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   private shouldScrollToBottom = false;
 
   ngOnInit() {
+    // IMPLEMENTAÇÃO 1: Solicitar permissão ao iniciar
+    this.requestNotificationPermission();
+
     onAuthStateChanged(this.auth, (user) => {
       if (user) {
         this.userId = user.uid;
@@ -150,6 +153,41 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     }
   }
 
+  // IMPLEMENTAÇÃO 2: Método auxiliar para pedir permissão
+  async requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+  }
+
+  // IMPLEMENTAÇÃO 3: Método para disparar a notificação
+  sendBrowserNotification(msg: Message) {
+    if (!('Notification' in window)) return;
+
+    if (Notification.permission === 'granted') {
+      let bodyText = 'Nova mensagem recebida';
+      
+      if (msg.text) {
+        bodyText = msg.text.length > 50 ? msg.text.substring(0, 50) + '...' : msg.text;
+      } else if (msg.mediaType) {
+        bodyText = `📷 Mídia recebida (${msg.mediaType})`;
+      }
+
+      const notification = new Notification('NOC Atendimentos', {
+        body: bodyText,
+        icon: 'assets/icons/icon-72x72.png', // Substitua pelo caminho do ícone do seu app
+        tag: 'new-message' // Tag para evitar spam de notificações (opcional)
+      });
+
+      // Foca na aba ao clicar na notificação
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    }
+  }
+
   private scrollToBottom(): void {
     try {
       this.messagesAreaElement.nativeElement.scrollTop = this.messagesAreaElement.nativeElement.scrollHeight;
@@ -168,6 +206,11 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     v = v.toUpperCase();
     v = v.replace(/[^A-Z0-9- ]/g, ""); 
     v = v.replace(/-{2,}/g, "-"); 
+    
+    if (v.length > 10) {
+      v = v.substring(0, 10);
+    }
+
     event.target.value = v;
   }
 
@@ -197,7 +240,6 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     event.target.value = v;
   }
 
-  // --- IMPLEMENTAÇÃO DA NOVA FUNÇÃO DE PLACEHOLDER ---
   getFibraIpPlaceholder(tipoFibra: string): string {
     if (!tipoFibra) return 'Digite o IP';
 
@@ -211,7 +253,6 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
     return 'Digite o IP';
   }
-  // ----------------------------------------------------
 
   onOpcaoChange() {
     if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
@@ -382,10 +423,31 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   loadMessages(convId: string) {
     const messagesRef = collection(this.firestore, `conversations/${convId}/messages`);
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
+    
+    // Flag para evitar notificações no carregamento inicial do histórico
+    let isFirstLoad = true;
+
     this.messages$ = new Observable((observer) => {
       return onSnapshot(q, (snap) => {
+        
+        // IMPLEMENTAÇÃO 4: Verificar mudanças e estado da página
+        if (!isFirstLoad) {
+          snap.docChanges().forEach((change: DocumentChange) => {
+            if (change.type === 'added') {
+              const msg = change.doc.data() as Message;
+              
+              // Se a mensagem não é minha E a página está oculta
+              if (msg.senderId !== this.userId && document.hidden) {
+                this.sendBrowserNotification(msg);
+              }
+            }
+          });
+        }
+
         const msgs = snap.docs.map(d => d.data() as Message);
         observer.next(msgs);
+        
+        isFirstLoad = false; // Após o primeiro snapshot, habilitamos as notificações
         setTimeout(() => { this.shouldScrollToBottom = true; }, 100);
       });
     });
