@@ -346,7 +346,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     }
 
     if (this.selectedOpcao === 'CADASTRO DE PORTA HUGHES') {
-      modoFinal = 'SATELITAL - BGAN (HUGHES)';
+      modoFinal = 'SATELITAL - BGAN';
     }
 
     const intakeData: IntakeData = {
