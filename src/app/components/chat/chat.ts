@@ -83,6 +83,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   modelsByClass: { [key: string]: string[] } = {
     'CHAVE TELECOMANDA': ['BONOMI', 'IMS'],
     'RELIGADOR': ['ARTECHE', 'COOPER', 'G&W', 'NOJA', 'SCHNEIDER', 'SIEMENS', 'TAVRIDA'],
+    'REGULADOR': ['ITB','TAPELATRO'],
     'SENSOR': ['MT', 'KOALA']
   };
 
@@ -93,7 +94,9 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
     'NOJA': ['RC 10'],
     'SCHNEIDER': ['ADVC', 'ADVC 2', 'ADVC 3', 'PTCC'],
     'SIEMENS': ['7SC80'],
-    'TAVRIDA': ['RC 5', 'SEL 751A (CREATE)', 'SEL 751A (ECIL)']
+    'TAVRIDA': ['RC 5', 'SEL 751A (CREATE)', 'SEL 751A (ECIL)'],
+    'ITB': ['CTR3'],
+    'TAPELATRO': ['RUA']
   };
 
   regionalsByState: { [key: string]: string[] } = {
@@ -120,7 +123,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   get currentRelaysOptions() {
-    if (this.selectedClasse !== 'RELIGADOR' || !this.selectedModelo) return [];
+    if (this.selectedClasse !== 'RELIGADOR' && this.selectedClasse !== 'REGULADOR' || !this.selectedModelo) return [];
     return this.relaysByRecloserModel[this.selectedModelo] || [];
   }
 

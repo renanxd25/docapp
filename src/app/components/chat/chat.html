@@ -115,7 +115,7 @@
                 required 
                 maxlength="10"
                 (input)="formatAlphaNumeric($event)"
-                placeholder="Apenas letras, números e hífen (Máx 10)">
+                placeholder="Apenas letras, números e hífen">
             </div>
             
             <div class="form-group">
@@ -147,6 +147,18 @@
             </div>
             
             @if (selectedClasse === 'RELIGADOR' && selectedModelo) {
+                <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
+                  <label style="color: #007bff;">↳ SELECIONE O RELÉ:</label>
+                  <select name="rele" [(ngModel)]="selectedRele" required>
+                    <option value="" disabled selected>Selecione o relé...</option>
+                    @for (rele of currentRelaysOptions; track rele) {
+                      <option [value]="rele">{{ rele }}</option>
+                    }
+                  </select>
+                </div>
+            }
+
+               @if (selectedClasse === 'REGULADOR' && selectedModelo) {
                 <div class="form-group" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;">
                   <label style="color: #007bff;">↳ SELECIONE O RELÉ:</label>
                   <select name="rele" [(ngModel)]="selectedRele" required>
