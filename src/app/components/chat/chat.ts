@@ -101,7 +101,7 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
 
   regionalsByState: { [key: string]: string[] } = {
     'AL': [ 'LESTE', 'OESTE'],
-    'AP': ['AP'],
+    'AP': ['METROPOLITANA'],
     'GO': ['ANÁPOLIS', 'FORMOSA', 'GOIÂNIA', 'IPORÁ', 'LUZILÂNDIA', 'METROPOLITANA', 'MONTE BELOS', 'MORRINHOS', 'RIO VERDE', 'URUAÇU'],
     'MA': ['CENTRO', 'LESTE', 'NOROESTE', 'NORTE', 'SUL'],
     'PA': ['CENTRO', 'NORDESTE', 'NORTE', 'OESTE', 'SUL'],
