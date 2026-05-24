@@ -100,13 +100,14 @@ export class Chat implements OnInit, OnDestroy, AfterViewChecked {
   };
 
   regionalsByState: { [key: string]: string[] } = {
-    'AL': ['CENTRO', 'LESTE', 'OESTE'],
+    'AL': [ 'LESTE', 'OESTE'],
     'AP': ['AP'],
     'GO': ['ANÁPOLIS', 'FORMOSA', 'GOIÂNIA', 'IPORÁ', 'LUZILÂNDIA', 'METROPOLITANA', 'MONTE BELOS', 'MORRINHOS', 'RIO VERDE', 'URUAÇU'],
     'MA': ['CENTRO', 'LESTE', 'NOROESTE', 'NORTE', 'SUL'],
-    'PA': ['CENTRO', 'LESTE', 'NORDESTE', 'NOROESTE', 'NORTE', 'OESTE', 'SUL'],
+    'PA': ['CENTRO', 'NORDESTE', 'NORTE', 'OESTE', 'SUL'],
     'PI': ['CENTRO-SUL', 'METROPOLITANA', 'NORTE', 'SUL'],
     'RS': ['CAMPANHA', 'CARBONIFERA', 'CENTRO', 'LITORAL NORTE', 'LITORAL SUL', 'METROPOLITANA', 'NORDESTE', 'NORTE', 'PORTO ALEGRE', 'SUL']
+    //'PA': ['CENTRO', 'LESTE', 'NORDESTE', 'NOROESTE', 'NORTE', 'OESTE', 'SUL'],
   };
 
   get distribuidorasKeys() {
